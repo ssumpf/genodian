@@ -1,0 +1,14 @@
+Sebastian has been working at Genode Labs since early 2009. Originating from a
+database background, his interest in operating systems became apparent in 2006
+which let him to the then so called _Bastei_ project - that would later turn
+into _Genode_.
+
+At Genode Labs Sebastian sees himself as an odd-job man that works on everything
+from low level kernel development, like RISC-V, over device drivers, 3D support,
+Qt5, TCP/IP, dynamic linking, virtualization, or Genode's Java port.
+
+His hobbies include dogs, hiking, and making music.
+
+*GitHub* [https://github.com/ssumpf - ssumpf]
+
+*Company* [https://www.genode-labs.com - Genode Labs]
