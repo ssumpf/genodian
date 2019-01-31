@@ -1,0 +1,56 @@
+
+                   A brief history of symbol maps on Genode
+
+
+
+When programming against Genode's shared libraries one might encounter things
+like this:
+
+! Error: LD: jump slot relocation failed for symbol: 'wait_for_continue'
+
+where __wait_for_continue__ can be exchanged with any function that should be
+present within a shared library. The thing is, not all symbols within a shared
+library should be accessible from the outside.
+
+Why?
+----
+
+In the early days of Genode we started to port things, like the dynamic linker
+and because it was ported we had to implement certain functions like _read_
+within the linker, while not using the libc - that implements _read_ also. The
+dynamic linker version just read the program header of its own ELF file and was
+satisfied. Things changed when my colleague started to use Qt5 applications and
+ended up to see the ELF header within his applications while using the _read_
+call.
+
+Symbol maps
+-----------
+
+Therefore, we started to use symbol maps for the linking of shared libraries. They allow to
+make certain symbols local to the library while others are global. In order to
+make sure your symbol/function is global call:
+
+! objdump -TC <shared object>
+
+and watch out for the _g_ letter in the second row. If your function is marked
+_l_ it is a local function which will not be accessible from the outside of the
+library.
+
+ABI files
+---------
+
+With Genode's
+[https://genode.org/documentation/developer-resources/package_management - packet management system]
+there is the notion of  ABI symbol files, within API archives, which are plain
+symbol files of a shared library and are linked against a binary. A symbol file
+contains all public function names as produced by
+
+! nm <shared object>
+
+for C++ methods, this means that they are mangled. So, if you encounter a
+function that is present within a shared library, but not visible from the
+outside, please add the symbol to the appropriate ABI file.
+
+Symbol files reside under _lib/symbols_ within a Genode repository. An example
+for _libpng_ can be found
+[https://github.com/genodelabs/genode/blob/master/repos/libports/lib/symbols/libpng - here]
