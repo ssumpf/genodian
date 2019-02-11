@@ -1,0 +1,33 @@
+                FOSDEM'19 - Microkernel devroom
+
+The year 2019 marked Genode Lab's turn to organize the
+[https://fosdem.org/2019/schedule/track/microkernels_and_component_based_os - Microkernels and Component-based OS devroom]
+at [https://fosdem.org - FOSDEM 2019] in Brussels. The devroom has been
+established in 2012 and every year since, varying open-source organizations or
+private microkernel enthusiasts have taken over and passed the organization
+helmet on. We had a great time meeting familiar and new faces at the devroom
+and, in my personal opinion, we had an interesting mixture of talks this year. I
+especially want to thank the [https://en.wikipedia.org/wiki/Unikernel - Unikernel]
+speakers, since they brought a breath of fresh air into the devroom, while
+staying at eye-level regarding the technical skills required for systems
+programming. So, thank you!
+
+As for Genode, I like to point out Alexander's talk about the progress he made
+regarding Genode's unified virtualization interface.
+
+[image fosdem_virtualization]
+  Microkernel virtualization under one roof - Dare the impossible
+
+The talk is available
+[https://fosdem.org/2019/schedule/event/microkernel_virtualization - here].
+
+Also, Norman gave an unexpected lightning talk about the current state of
+Genode's Sculpt OS, which really gathered traction. The video is unfortunately
+not online yet, but I will post an update within this article when it is
+available. The link can already be found
+[https://fosdem.org/2019/schedule/event/microkernel_lightning_talks - here].
+
+All talks are available at
+[https://fosdem.org/2019/schedule/track/microkernels_and_component_based_os - FOSDME's]
+main site. Have fun watching and if you feel like organizing the Microkernel
+devroom next year, let us know - we would be happy to give support.
