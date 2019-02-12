@@ -19,7 +19,8 @@ regarding Genode's unified virtualization interface.
   Microkernel virtualization under one roof - Dare the impossible
 
 The talk is available
-[https://fosdem.org/2019/schedule/event/microkernel_virtualization - here].
+[https://fosdem.org/2019/schedule/event/microkernel_virtualization - here]. A
+mobile friendly version is also [https://youtu.be/L83qlU9pQtQ - available].
 
 Also, Norman gave an unexpected lightning talk about the current state of
 Genode's Sculpt OS, which really gathered traction. The video is unfortunately
