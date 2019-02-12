@@ -29,6 +29,6 @@ available. The link can already be found
 [https://fosdem.org/2019/schedule/event/microkernel_lightning_talks - here].
 
 All talks are available at
-[https://fosdem.org/2019/schedule/track/microkernels_and_component_based_os - FOSDME's]
+[https://fosdem.org/2019/schedule/track/microkernels_and_component_based_os - FOSDEM's]
 main site. Have fun watching and if you feel like organizing the Microkernel
 devroom next year, let us know - we would be happy to give support.
