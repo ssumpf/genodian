@@ -1,0 +1,14 @@
+             FOSDEM'19 - Microkernel devroom _(update)_
+
+This is a follow up to my [http://genodians.org/ssumpf/2019-02-11-fosdem2019 - FOSDEM'19]
+post - that also has been updated. Norman's and Jakub's lightning talks are now
+available as
+[https://video.fosdem.org/2019/AW1.121/microkernel_lightning_talks.mp4 - MP4]
+and
+[https://video.fosdem.org/2019/AW1.121/microkernel_lightning_talks.webm - WEBM]
+streams.
+
+[image fosdem_lightning_talks]
+   Genode's Sculpt OS - A general purpose microkernel based OS in daily use]
+
+Have fun watching!

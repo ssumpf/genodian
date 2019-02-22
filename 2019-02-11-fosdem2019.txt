@@ -23,10 +23,15 @@ The talk is available
 mobile friendly version is also [https://youtu.be/L83qlU9pQtQ - available].
 
 Also, Norman gave an unexpected lightning talk about the current state of
-Genode's Sculpt OS, which really gathered traction. The video is unfortunately
-not online yet, but I will post an update within this article when it is
-available. The link can already be found
-[https://fosdem.org/2019/schedule/event/microkernel_lightning_talks - here].
+Genode's Sculpt OS, which really gathered traction. 
+
+[image fosdem_lightning_talks]
+   Genode's Sculpt OS - A general purpose microkernel based OS in daily use
+
+Here are the links:
+[https://video.fosdem.org/2019/AW1.121/microkernel_lightning_talks.mp4 - MP4]
+and
+[https://video.fosdem.org/2019/AW1.121/microkernel_lightning_talks.webm - WEBM].
 
 All talks are available at
 [https://fosdem.org/2019/schedule/track/microkernels_and_component_based_os - FOSDEM's]
