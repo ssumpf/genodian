@@ -1,0 +1,845 @@
+%%
+%% Tikz styles used for diagrams
+%%
+
+\tikzstyle{every node}+=[font=\footnotesize \sffamily]
+
+\tikzstyle{dropshadow} = [blur shadow={shadow blur steps=5,shadow xshift=.0ex,
+                                       shadow yshift=-0.3ex,opacity=0.9,
+                                       shadow blur radius=0.5ex}]
+
+\tikzstyle{compound} = [rectangle, draw, text centered,
+                         rounded corners,
+                         top color=white,
+                         bottom color=black!5,
+                         dropshadow,
+                         draw=black!10]
+
+\tikzstyle{component} = [compound, draw=black!70]
+
+\tikzstyle{compoundlabel} = [below right,
+                             text opacity=0.6, inner sep=0, outer sep=0.7ex]
+
+\tikzstyle{capability} = [circle, draw, fill, thick,
+                          inner color=white,
+                          outer color=blue!30,
+                          inner sep=1pt,
+                          minimum size=2.8ex,
+                          fill opacity=1.0, dropshadow,
+                          anchor=mid]
+
+\tikzstyle{capslot} = [minimum size=2.5ex, inner sep=0ex, outer sep=0ex,
+                       fill=white, draw=black!70]
+
+\tikzstyle{kernelobj} = [draw, tape, tape bend top=none,
+                         draw=black!70, align=center, fill=white, dropshadow]
+
+\tikzstyle{arrow} = [draw=black!80, ->, >= stealth, sloped, above]
+
+\tikzstyle{userland} = [fill=green]
+
+\tikzstyle{kernel} = [fill=yellow]
+
+\tikzstyle{thread} = [font=\normalsize]
+
+\tikzstyle{nodecompound} = [rectangle, draw, align=center,
+                            minimum height=2em, minimum width=2em,
+                            inner sep=1.5ex, outer sep=1ex,
+                            rounded corners,
+                            top color=white,
+                            bottom color=black!20,
+                            dropshadow,
+                            draw=black!10, thick]
+
+\tikzstyle{ownership} = [draw, single arrow, draw=black!10, minimum height=4ex,
+                         bottom color=white, top color=red!70,
+                         single arrow head extend=1ex]
+
+\tikzstyle{every picture}+=[remember picture]
+
+\newcommand\kernelred{black!20!red!100}
+
+\tikzstyle{dataspace} = [tape, draw, tape bend top=none, fill=white,
+                         dropshadow, minimum height=6ex, align=center,
+                         tape bend height=0.5ex, fill opacity=0.95]
+
+% dotted line that connects dataspaces mapped in different address spaces
+\tikzstyle{dataspacemapped} = [draw, draw, dotted]
+
+% style representing a hardware component
+\tikzstyle{hardware} = [draw=black!50, dropshadow, align=center,
+                        path fading=flow fade, thin,
+                        top color=black!5, bottom color=black!20]
+
+%%
+%% Styles for flow charts
+%%
+\tikzstyle{flowborder} = [draw=black!50]
+
+\tikzstyle{flowbox} = [flowborder, fill=white, dropshadow,
+                       rounded corners=0.5ex,
+                       fill=yellow!20,
+                       path fading=flow fade]
+
+\tikzstyle{flowdecision} = [flowborder, diamond, fill=blue!20,
+                           text badly centered, align=center,
+                           inner sep=0.5ex,
+                           dropshadow, path fading=flow fade]
+
+%%
+%% Styles for timeline diagrams
+%%
+
+\tikzstyle{activetimeline} = [draw,
+                              blur shadow={shadow blur steps=5},
+                              shadow yshift=-0.3ex, shadow xshift=0em,
+                              rounded corners=0.4ex,
+                              color=black!30,
+                              path fading=timeline fade right,
+                              left color=yellow!90!white!50,
+                              right color=yellow!100!white!50,
+                              minimum width=2.5ex]
+
+\tikzstyle{timelinemessage} = [draw=black!80, ->, >= stealth, sloped,
+                               shorten >= 0.8ex, shorten <= 0.8ex]
+
+\tikzstyle{timelinegroup} = [draw=black!50, dashed,
+                             rounded corners, fill=black, fill opacity=0.05]
+
+
+%%
+%% Styles for UML class diagrams
+%%
+
+\tikzstyle{umlclass}  = [draw, fill=white, dropshadow, align=left]
+\tikzstyle{umlclass2} = [umlclass, rectangle split, rectangle split parts=2]
+\tikzstyle{umlclass3} = [umlclass, rectangle split, rectangle split parts=3]
+
+\tikzstyle{umlinfo} = [umlclass,
+                       chamfered rectangle,
+                       chamfered rectangle corners=north east,
+                       text opacity=0.5, draw opacity=0.5, align=center]
+
+\tikzstyle{umlinfoline} = [draw, draw opacity=0.5, dotted, thick]
+\tikzstyle{umlinherit} = [draw, ->, >= open triangle 60]
+\tikzstyle{umlrelated} = [draw, above]
+\tikzstyle{umloperate} = [arrow, dashed, above]
+
+
+%%
+%% Functions for constructing Tikz nodes
+%%
+
+%%
+% Create capability space node
+%
+% argument 1: node name, also used as prefix for the individual slots
+% argument 2: maximum index
+% argument 3: node arguments
+%
+% Uses tikz style "capslot"
+%
+\newcommand\capspacenode[3]{
+	\node[#3] (#1) {
+		\begin{tikzpicture}
+			\begin{scope}[start chain,node distance=0,rounded corners=0]
+				\foreach \i in {0,1,...,#2} {
+					\node [on chain,capslot,draw] (#1\i) {};
+					\path (#1\i) node[yshift=0.5ex, xshift=-0.5ex, inner sep=0.5ex,
+					                  text=black!60] {\tiny \i};
+				}
+				\node [on chain,capslot, fill=none, draw=none, outer sep=0.5ex] {$\ldots$};
+			\end{scope}
+		\end{tikzpicture}
+	};
+}
+
+
+%%
+% Create RPC object node
+%
+% argument 1: node name, also used as prefix for the individual slots
+% argument 2: node arguments
+% argument 3: capability name
+% argument 4: node content
+% argument 5: capability node arguments
+%
+% The capability node will be named #1cap.
+% The object node will be named #1obj.
+%
+\newcommand\rpcobjectnodebase[5] {
+	\node[#2] (#1) {
+		\begin{tikzpicture}
+			\node [draw, left color=blue!20, right color=white, minimum size=0pt,
+			       thick, inner sep=1ex, rounded corners=0.5ex, dropshadow]
+			       (#1obj) {#4};
+			\node [outer sep=0pt, capability, #5]
+			       (#1cap) {#3};
+			\path [draw, dropshadow, very thick] (#1cap) -- node (#1link) {} (#1obj);
+		\end{tikzpicture}
+	};
+}
+
+
+%%
+% Create RPC object node with the capability to the right of the object
+%
+% The four arguments are the same as for 'rpcobjectnodebase'.
+%
+\newcommand\rpcobjectrnode[4] {
+	\rpcobjectnodebase{#1}{#2}{#3}{#4}{right=1.5ex of #1obj} }
+
+
+%%
+% Create RPC object node with the capability to the left of the object
+%
+% The four arguments are the same as for 'rpcobjectnodebase'.
+%
+\newcommand\rpcobjectlnode[4] {
+	\rpcobjectnodebase{#1}{#2}{#3}{#4}{left=1.5ex of #1obj} }
+
+
+%%
+% Create compounding node
+%
+% argument 1:  node name
+% argument 2:  node style
+% argument 3:  node content
+%
+\newcommand\compoundnode[3] {
+	\node[#2] (#1) {
+		\begin{tikzpicture}[xshift=0, yshift=0, outer sep=0, inner sep=0,
+		                    rounded corners=0]
+			#3
+		\end{tikzpicture}
+	};
+}
+
+
+%%
+% Create labeled compounding box node
+%
+% argument 1:  node name
+% argument 2:  node style
+% argument 3:  label to appear at the north-west corner
+% argument 4:  content of the box
+%
+\newcommand\labeledcompoundnode[4] {
+	\compoundnode{#1}{inner sep=3ex, #2}{#4}
+	\path (#1.north west) node[compoundlabel] {#3};
+}
+
+
+%%
+% Create kernel-user boundary
+%
+% argument 1:  nodes that are contained in the kernel,
+%              specified as tikz style, e.g., 'fit=(node1) (node2)...'
+%
+\newcommand\kernelboundary[1] {
+	\node [inner sep=4ex, #1] (kernelboundary) {};
+	\draw [dashed, very thick, color=\kernelred] (kernelboundary.north west)
+	      -- (kernelboundary.north east)
+	      node[below left] {kernel};
+}
+
+
+%%
+% Create node for an upward pointing thread
+%
+% argument 1:  node name
+% argument 2:  node style
+%
+\newcommand\upwardthreadnode[2] {
+	\node [thread, #2] (#1) {$\uplsquigarrow$}; }
+
+
+%%
+% Create node for an downward pointing thread
+%
+% argument 1:  node name
+% argument 2:  node style
+%
+\newcommand\downwardthreadnode[2] {
+	\node [thread, #2] (#1) {$\downrsquigarrow$}; }
+
+
+%%
+% Create entrypoint node
+%
+% argument 1:  node name
+% argument 2:  node style
+% argument 3:  component where the entrypoint resides
+%
+% The command creates sub nodes for the semicircle called #1ep and the
+% thread called #1thread.
+%
+\newcommand\entrypointnode[3]{
+	\node [above, inner sep=0, outer sep=0, #2] at (#3.south) (#1) {
+		\begin{tikzpicture}
+
+			\node [draw=black, draw opacity=0.4, ball color=blue, fill opacity=0.2,
+			       rounded corners=0, shape=semicircle,
+			       inner sep=1.3ex, outer sep=0, above]
+			(#1ep) {};
+
+			\path (#1ep.arc end) node[compoundlabel, right, yshift=1ex] {EP};
+
+			\path (#1ep.arc start) [thread]
+				node [left, xshift=-0.3ex, yshift=1ex] (#1thread) {$\uplsquigarrow$};
+
+		\end{tikzpicture}
+	};
+}
+
+
+%%
+% Create path that illustrates a capability delegation
+%
+\newcommand\delegationpath{
+	\path [color=black!30!blue!30, text=black,
+	       decoration={markings,
+	                   mark=between positions 0.03 and 1 step 1ex with {\arrow{latex}}},
+	       postaction={decorate}]}
+
+
+\newcommand\capability[1]{
+	\begin{tikzpicture}[baseline=-0.6ex]
+	\node [capability] {#1};
+	\end{tikzpicture}
+}
+
+
+%%
+%% Timeline diagrams
+%%
+
+\newcounter{numtimelines}
+
+
+%%
+% Create new vertical timeline
+%
+% argument: timeline name
+%
+\newcommand{\newtimeline}[1] {
+
+	\stepcounter{numtimelines}
+
+	\path (timelineanchor) node (#1)     {};
+	\path (timelineanchor) node (last#1) {};
+
+	\pgfkeyssetvalue{/timeline\thenumtimelines/name}{#1}
+
+	\pgfkeyssetvalue{/timeline #1/state}{idle}
+}
+
+
+%%
+% Draw vertical state representation of the specified timeline (internal)
+%
+% argument: timeline name
+%
+\newcommand{\finishtimeline}[1] {
+
+	\def\state{\pgfkeysvalueof{/timeline #1/state}}
+
+	\ifthenelse{\equal{\state}{idle}}{
+
+		\draw[dashed, thick, draw opacity=0.1] (last#1) -- (#1);
+	}{}
+
+	\ifthenelse{\equal{\state}{active}}{
+
+		\path (last#1)+(0,-0.1) node (top)    {};
+		\path     (#1)+(0, 0.1) node (bottom) {};
+
+		\path (last#1) node[inner sep=0pt, fit=(top) (bottom), activetimeline] {};
+	}{}
+
+	\path (#1) node (last#1) {};
+}
+
+
+%%
+% Timeline environment
+%
+% The environment can only be used within a tikzpicture environment
+%
+\newenvironment{timelinediagram} {
+
+	% reset timeline counter
+	\setcounter{numtimelines}{0}
+
+	% reset anchor used for next call of 'newtimeline'
+	\path (0,0) node (timelineanchor) {};
+
+	\newcommand{\timestepvector}{0,-1}
+
+	%%
+	% Add time step
+	%
+	\newcommand{\timestep} {
+
+		\foreach \i in {1,...,\thenumtimelines}{
+
+			\def\name{\pgfkeysvalueof{/timeline\i/name}}
+
+			% move timeline forward in time
+			\path (\name)+(\timestepvector) node (\name) {};
+		}
+	}
+
+	%%
+	% Activate timeline
+	%
+	\newcommand{\activate}[1] {
+		\finishtimeline{##1}
+		\pgfkeyssetvalue{/timeline ##1/state}{active}
+	}
+
+	%%
+	% Deactivate timeline
+	%
+	\newcommand{\deactivate}[1] {
+		\finishtimeline{##1}
+		\pgfkeyssetvalue{/timeline ##1/state}{idle}
+	}
+
+	%%
+	% Create transition from one timeline to another
+	%
+	\newcommand{\transition}[3] {
+		%
+		% The named 'transitionlabel' node can be used to attach further
+		% information to the message. The unnamed second node is designated
+		% for labeling simple transitions.
+		%
+		\draw[timelinemessage] (##1) -- node (transitionlabel) {} node[above] {##3} (##2);
+		\deactivate{##1}
+		\activate{##2}
+	}
+
+} {
+	% finish all timelines
+	\foreach \i in {1,...,\thenumtimelines}{
+		\def\name{\pgfkeysvalueof{/timeline\i/name}}
+		\finishtimeline{\name}
+	}
+}
+
+
+%%
+%% Tools for creating illustrations of memory ranges
+%%
+
+\newenvironment{memrange} {
+
+	\newcommand{\alloc}[2]{
+		\path (memrangeanchor) node[right=0ex, minimum width=##1, ##2] (currmemrangeanchor) {};
+		\path (currmemrangeanchor.east) coordinate (memrangeanchor) {};
+	}
+
+	\newcommand{\remembersouth}[1]{
+		\path (currmemrangeanchor.south) coordinate (##1) {}; }
+
+	\newcommand{\remembersoutheast}[1]{
+		\path (currmemrangeanchor.south east) coordinate (##1) {}; }
+
+	\newcommand{\remembersouthwest}[1]{
+		\path (currmemrangeanchor.south west) coordinate (##1) {}; }
+
+	\begin{tikzpicture}[outer sep=0]
+		% reset anchor used for appending allocations
+		\path (0,0) coordinate (memrangeanchor) {};
+
+} {
+		% add some spacing to the right
+		\path (memrangeanchor) node[right=0ex, minimum height=0, inner sep=0,
+		                            minimum width=1ex] {};
+	\end{tikzpicture}
+}
+
+
+% styles used for illustrating heap partitioning
+\tikzstyle{heapalloc}  = [rectangle, minimum height=3ex, very thin, draw, draw opacity=0.5]
+\tikzstyle{heapalloc1} = [heapalloc, top color=red!10!lightgray,
+                                     bottom color=red!50!lightgray]
+\tikzstyle{heapalloc2} = [heapalloc, top color=yellow!10!lightgray,
+                                     bottom color=yellow!50!lightgray]
+\tikzstyle{heapempty}  = [heapalloc, top color=white!10!lightgray,
+                                     bottom color=white!50!lightgray]
+
+% styles used for illustrating the component creation
+\tikzstyle{memtype}     = [rectangle, minimum height=1ex, very thin, draw,
+                           draw opacity=0.5]
+\tikzstyle{memtext}     = [memtype, top color=red!10!lightgray,
+                                    bottom color=red!50!lightgray]
+\tikzstyle{memdata}     = [memtype, top color=yellow!10!lightgray,
+                                    bottom color=yellow!50!lightgray]
+\tikzstyle{memrodata}   = [memtype, top color=yellow!10!white,
+                                    bottom color=yellow!50!white]
+\tikzstyle{memavail}    = [memtype, top color=white!10!lightgray,
+                                    bottom color=white!50!lightgray]
+\tikzstyle{memmanaged}  = [memtype, top color=blue!10!lightgray,
+                                    bottom color=blue!50!lightgray]
+\tikzstyle{memreserved} = [memtype, top color=white!80!lightgray,
+                                    bottom color=white!80!lightgray,
+                                    pattern=north east lines,
+                                    pattern color=black]
+
+%%
+%% Wheel used for illustrating the audio-out session interface
+%%
+
+\newenvironment{wheel}[1] {
+
+	%%
+	% Draw slices
+	%
+	% argument 1: range to iterate over the angles, in steps of 10
+	% argument 2: style used for drawing the slices
+	%
+	\newcommand{\slices}[2]{
+		\foreach \i in {##1} {
+			\path[##2]
+				(\i + 2:#1*0.2)  -- (\i + 2:#1*0.95) --
+				(\i + 8:#1*0.95) -- (\i + 8:#1*0.2) --cycle;
+		}
+	}
+
+	%%
+	% Remember slice as tikz coordinate
+	%
+	% argument 1: angle
+	% argument 2: name of coordinate
+	% 
+	\newcommand{\rememberouter}[2]{
+		\path (##1 + 5:#1*0.95) coordinate (##2) {}; }
+
+	\newcommand{\rememberinner}[2]{
+		\path (##1 + 5:#1*0.85) coordinate (##2) {}; }
+
+	\begin{tikzpicture}
+
+		\path[draw, draw opacity=0.4, inner color=white, outer color=white!80!black, even odd rule]
+			(0,0) circle (#1);
+
+		\foreach \i in {0, 10,...,350} {
+			\path[white, draw, draw opacity=0.5] (0,0) -- (\i:#1); }
+
+} {
+	\end{tikzpicture}
+}
+
+
+%%
+%% API specification
+%%
+
+%
+% Common color definitions for the API spec
+%
+\definecolor{apinamespace} {rgb}{1.0,0.95,0.78}
+\definecolor{apimethod}    {rgb}{0.8,0.9,0.7}
+\definecolor{apiclass}     {rgb}{0.8,0.85,0.9}
+\definecolor{apifunction}  {rgb}{1.0,0.85,0.6}
+
+%
+% Tikz style definitions used in the API spec
+%
+\tikzstyle{apioutline}    = [draw=black!15]
+\tikzstyle{apititlelabel} = [shape=signal, draw,
+                             minimum height=3ex, top color=white,
+                             draw opacity=0.3,
+                             signal to=east]
+
+\tikzstyle{apinamespacelabel} = [apititlelabel, bottom color=apinamespace]
+\tikzstyle{apiclasslabel}     = [apititlelabel, bottom color=apiclass]
+\tikzstyle{apimethodlabel}    = [apititlelabel, bottom color=apimethod]
+\tikzstyle{apifunctionlabel}  = [apititlelabel, bottom color=apifunction]
+
+\tikzstyle{apisectionlabel} = [at=(leftanchor), inner xsep=1ex, inner ysep=0.8ex,
+                               text=apibg!20!black, font=\bfseries \small]
+
+
+%%
+% API description box
+%
+% argument 1: initial background color in r,g,b
+%
+\newenvironment{apibox}[1] {
+
+	\path (0,0.5ex) node {}; % enforce a bit of spacing above the box
+
+	\path (0,0)        coordinate (leftanchor);
+	\path (leftanchor) coordinate (origleftanchor);
+
+	\path (0.98\textwidth,0) coordinate (righttop);
+
+	\definecolor{apibg} {rgb}{#1}
+
+	\tikzstyle{apibg} = [fill=apibg!50!white]
+
+	\newcommand{\apiboxtitle}[2]{
+
+		% execute argument
+		##1
+
+		%
+		% Define orig anchor (the background starts here), and anchor
+		% (the position of the background to be processed)
+		%
+		\path (leftanchor |- namespacelabel.east)  coordinate (origleftanchor);
+		\path (leftanchor |- namespacelabel.south) coordinate (leftanchor);
+
+		%
+		% Annotation at the right-top corner
+		%
+		\node[at=(righttop |- origleftanchor), anchor=north east,
+		      text opacity=0.8, minimum size=2ex, inner sep=2ex] (annotation) {##2};
+
+		% process first part of the background, including right counded corner
+		\begin{scope}[on background layer]
+			\path[apibg]               (origleftanchor)
+			   {[rounded corners=5] -- (righttop |- origleftanchor)}
+			                        -- (righttop |- leftanchor)
+			                        -- (leftanchor) --cycle;
+			\path[apioutline]          (origleftanchor)
+			   {[rounded corners=5] -- (righttop |- origleftanchor)}
+			                        -- (righttop |- leftanchor);
+		\end{scope}
+
+		% advance origleftanchor to be used as start pos for next bg step
+		\path (leftanchor) coordinate (origleftanchor);
+	}
+
+	%%
+	% Create API box title for a global namespace overview
+	%
+	% argument 1: annotation (at the top-right corner)
+	%
+	\newcommand{\apiglobalnamespaceboxtitle}[1]{
+
+		\apiboxtitle{
+
+			%
+			% Invisible namespacelabel
+			%
+			\node[at=(leftanchor), anchor=north west]
+				(namespacelabel) {};
+
+		}{##1}
+	}
+
+	%%
+	% Create API box title for a namespace overview
+	%
+	% argument 1: namespace
+	% argument 2: annotation (at the top-right corner)
+	%
+	\newcommand{\apinamespaceboxtitle}[2]{
+
+		\apiboxtitle{
+
+			%
+			% Segmented title label
+			%
+			\node[apinamespacelabel, at=(leftanchor), anchor=north west]
+				(namespacelabel) {##1};
+
+		}{##2}
+	}
+
+	%%
+	% Create API box title for a global-function description
+	%
+	% argument 1: namespace
+	% argument 2: function name
+	% argument 3: annotation (at the top-right corner)
+	%
+	\newcommand{\apifunctionboxtitle}[3]{
+
+		\apiboxtitle{
+
+			%
+			% Segmented title label
+			%
+			\node[apinamespacelabel, at=(leftanchor), anchor=north west, text opacity=0.5]
+				(namespacelabel) {##1};
+			\node[apifunctionlabel, at=(namespacelabel.east), anchor=west, signal from=west]
+				(classlabel) {##2};
+
+		}{##3}
+	}
+
+	%%
+	% Create API box title for a class description
+	%
+	% argument 1: namespace
+	% argument 2: class
+	% argument 3: annotation (at the top-right corner)
+	%
+	\newcommand{\apiclassboxtitle}[3]{
+
+		\apiboxtitle{
+
+			%
+			% Segmented title label
+			%
+			\node[apinamespacelabel, at=(leftanchor), anchor=north west, text opacity=0.5]
+				(namespacelabel) {##1};
+			\node[apiclasslabel, at=(namespacelabel.east), anchor=west, signal from=west]
+				(classlabel) {##2};
+
+		}{##3}
+	}
+
+	%%
+	% Create API box title for a class method
+	%
+	% argument 1: namespace
+	% argument 2: class
+	% argument 3: function
+	% argument 4: annotation (at the top-right corner)
+	%
+	\newcommand{\apimethodboxtitle}[4]{
+
+		\apiboxtitle{
+
+			%
+			% Segmented title label
+			%
+			\node[apinamespacelabel, at=(leftanchor), anchor=north west, text opacity=0.5]
+				(namespacelabel) {##1};
+			\node[apiclasslabel, at=(namespacelabel.east), anchor=west, text opacity=0.5, signal from=west]
+				(classlabel) {##2};
+			\node[apimethodlabel, at=(classlabel.east), anchor=west, signal from=west]
+				(functionlabel) {##3};
+		}{##4}
+	}
+
+	%%
+	% Append left-aligned content to API box
+	%
+	% argument: content
+	%
+	\newcommand{\apiboxcontent}[1]{
+
+		\node[at=(leftanchor), anchor=north west, minimum size=1ex,
+		      inner sep=1ex] (content) {##1};
+
+		\path (leftanchor |- content.south) coordinate (leftanchor);
+	}
+
+	%%
+	% Add vertical space to API box
+	%
+	% argument: space
+	%
+	\newcommand{\apiboxvspace}[1]{
+
+		\path (leftanchor)+(0,-##1) coordinate (leftanchor);
+	}
+
+	%%
+	% Append centered content to API box
+	%
+	% argument: content
+	%
+	\newcommand{\apiboxcenteredcontent}[1]{
+
+		\path (leftanchor) -- coordinate (mid) (righttop |- leftanchor);
+		\node[at=(mid), anchor=north, minimum size=1ex,
+		      inner sep=1.5ex] (content) {##1};
+
+		\path (leftanchor |- content.south) coordinate (leftanchor);
+	}
+
+	%%
+	% Append section to API box
+	%
+	% argument 1: section label text
+	% argument 2: section background color as r,g,b
+	%
+	\newcommand{\apisection}[2]{
+
+		% create section label with transparent text to obtain its bounding box
+		\node[apisectionlabel, at=(leftanchor), text opacity=0, anchor=north west]
+			(sectionlabel) {##1};
+
+		% advance anchor to extend the old background to the south of the tab
+		\path (sectionlabel.south west) coordinate (leftanchor);
+
+		%
+		% Complete the background of the previous part of the API box
+		%
+		\begin{scope}[on background layer]
+			\path[apibg] (origleftanchor)
+			          -- (righttop |- origleftanchor)
+			          -- (righttop |- leftanchor)
+			          -- (leftanchor)
+			          --cycle;
+
+		\end{scope}
+
+		% switch to using the new color
+		\definecolor{apibg} {rgb}{##2}
+
+		% helper coordinates for drawing the tab
+		\path (sectionlabel.south east)+(4ex,1ex) coordinate (mid);
+		\path (sectionlabel.south west)+(0,-2ex)  coordinate (below);
+
+		%
+		% Draw tab hosting the section label
+		%
+		\path [top color=apibg!90!black, bottom color=apibg!50!white]
+		      (sectionlabel.north west)
+		         {[rounded corners=7] -- (sectionlabel.north east)
+		                              -- (mid)}
+		                              -- (righttop |- mid)
+		                              -- (righttop |- below)
+		                              -- (sectionlabel.south west |- below)
+		                              --cycle;
+
+		\path[apioutline] (origleftanchor)
+		               -- (leftanchor);
+		\path[apioutline] (righttop |- origleftanchor)
+		               -- (righttop |- leftanchor);
+
+		\path [draw=apibg!80!black]
+		      (sectionlabel.north west)
+		         {[rounded corners=7] -- (sectionlabel.north east)
+		                              -- (mid)
+		                              -- (righttop |- mid)};
+
+		%
+		% Another instance of the section label with visible text
+		%
+		\node[apisectionlabel, at=(sectionlabel.north west), anchor=north west] {##1};
+
+		\path (leftanchor)                       coordinate (origleftanchor);
+		\path (leftanchor |- sectionlabel.south) coordinate (leftanchor);
+	}
+} {
+	% make sure the box is large enough to fit the annotation
+	\node[fit=(leftanchor) (annotation.south)] (maxhelper) {};
+	\path (leftanchor |- maxhelper.south) coordinate (leftanchor);
+
+	%
+	% Finalize background up to the current leftanchor
+	%
+	\begin{scope}[on background layer]
+		\path[apibg]               (origleftanchor)
+		                        -- (righttop |- origleftanchor)
+		  {[rounded corners=5]  -- (righttop |- leftanchor)
+		                        -- (leftanchor)} --cycle;
+	\end{scope}
+
+	\path[apioutline]          (righttop |- origleftanchor)
+	  {[rounded corners=5]  -- (righttop |- leftanchor)
+	                        -- (leftanchor)
+	                        -- (origleftanchor)};
+
+	\path (leftanchor)+(0,-0.5ex) node {}; % enforce a bit of spacing below the box
+}
