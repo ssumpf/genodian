@@ -1,0 +1,196 @@
+\begin {tikzpicture}
+
+	\definecolor{color3} {rgb} {0.9,0.9,0.9}
+	\definecolor{color2} {rgb} {0.8,0.9,0.8}
+	\definecolor{color1} {rgb} {1.0,1.0,1.0}
+
+	\def\compDist         {1ex}
+	\def\compWidth        {11ex}
+	\def\compHeight       {3ex}
+	\def\compNr           {3}
+	\def\netWidth         {11ex}
+	\def\netHeight        {5ex}
+	\def\netDist          {6ex}
+	\def\intfWidth        {1.5ex}
+	\def\intfHeight       {1.5ex}
+	\def\intfDist         {\compDist+\compWidth-\intfWidth/2}
+	\def\reportWidth      {3ex}
+	\def\reportHeight     {4ex}
+	\def\ruleDist         {0.2ex}
+	\def\ruleWidth        {\compWidth}
+	\def\ruleHeight       {3.7ex}
+	\def\routerLablHeight {6ex}
+	\def\routerWidth      {\compNr*\compWidth+\compNr*\compDist+\compDist*4+\compNr*0.1ex}
+	\def\routerHeight     {\routerLablHeight+\compDist*2+\ruleHeight}
+	\def\compRounding     {0.6ex}
+
+	\tikzstyle{compSty} = [
+		component, rounded corners=\compRounding, very thin,
+		draw=black, minimum height=\compHeight,
+		bottom color=color3, minimum width=\compWidth]
+
+	\tikzstyle{intfConnSty} = [
+		draw=black!40!white, thick, minimum height=\intfHeight,
+		fill=color1, minimum width=\intfWidth, inner sep=0ex, densely dotted]
+
+	\tikzstyle{ruleSty} = [
+		rounded corners=\ruleHeight/2, thin, align=center,
+		draw=black!50!white, minimum height=\ruleHeight,
+		fill=color1, opacity=0.7, text width=\ruleWidth-2ex, minimum width=\ruleWidth]
+
+	\tikzstyle{intfSty} = [
+		rounded corners=\intfHeight/3, thin,
+		draw=black!50!white, minimum height=\intfHeight,
+		fill=color1, minimum width=\intfWidth, inner sep=0ex]
+
+	\tikzstyle{intfContactSty} = [
+		intfSty, rounded corners=0ex, minimum width=0.5ex,
+		minimum height=\intfHeight/3]
+
+	\tikzstyle{reportSty} = [
+		draw=black!40!white, thick, fill=color1]
+
+	\tikzstyle{netSty} = [
+		draw=black!50!white, dropshadow, fill=white, cloud, cloud puffs=13,
+		minimum width=\netWidth, minimum height=\netHeight, opacity=1.0]
+	
+	\tikzstyle{netStyIot} = [
+		draw=black!50!white, dropshadow, fill=white, cloud, cloud puffs=13,
+		minimum width=\netWidth, minimum height=8ex, opacity=1.0]
+
+	% router
+%	\node[compSty, minimum width=\routerWidth, minimum height=\routerHeight] (c3) { };
+
+	\node[compSty] (management) { \tiny IoT Managment Component };
+	\node[compSty, below=3ex of management.south] (filter) { \tiny Java network filter };
+
+%	% real network
+	\node [netStyIot, above=0ex of management] (phy1) { };
+	\node [above=1.0ex of management.north, opacity=0.7, text width=\netWidth-2ex, align=center] {
+		\baselineskip=0ex \tiny Physical IoT Network \par};
+%\path[intfConnSty](phy1.south) -- (management.north);
+	\path[intfConnSty](filter.north) -- (management.south);
+
+	% domain 1 interface plug
+	\node[intfSty, above=-0.5ex of filter.north] (c1) { };
+	\node[intfContactSty, above right=0ex of c1.south west] (c2) { };
+	\node[intfContactSty, right=-0.1ex of c2] (c2) { };
+	\node[intfContactSty, right=-0.1ex of c2] (c2) { };
+
+
+% plug
+	\node[intfSty, below=-0.5ex of filter.south] (plug1) { };
+	\node[intfContactSty, below right=0ex of plug1.north west] (c2) { };
+	\node[intfContactSty, right=-0.1ex of c2] (c2) { };
+	\node[intfContactSty, right=-0.1ex of c2] (c2) { };
+
+%	% real network
+	\node [netSty, below=\netDist/2 of filter] (phy2) { };
+	\node [below=3.8ex of filter.south, opacity=0.7, text width=\netWidth-2ex, align=center] {
+		\baselineskip=0ex \tiny Physical Home Network \par};
+	\path[intfConnSty](phy2.north) -- (plug1.south);
+	
+
+% iot nodex
+	\node[component, above=-1.5ex of phy1.north] (c1) { \tiny IoT };
+	\node[component, above=-1.5ex of phy1.north west] (c1) { \tiny IoT };
+	\node[component, above=-1.5ex of phy1.north east] (c1) {\tiny IoT };
+	\node[component, above=-1.5ex of phy1.west] (c1) { \tiny IoT };
+	\node[component, above=-1.5ex of phy1.east] (c1) { \tiny IoT };
+
+%	% router
+%	\path(c3.south west)+(\compDist,\routerLablHeight) coordinate (c1);
+%	\node[below right=0ex of c3.north west] (c2) { NIC Router };
+%	\path(c1)+(0ex,\compDist) coordinate (c1);
+%	\path(c1)+(\routerWidth-3*\compDist,0ex) coordinate (c4);
+%	\path(c1.south west)+(0ex,\compDist*2) coordinate (c1);
+%
+%	% domain 1
+%	\path(c3.north west) coordinate (c1);
+%
+%	% domain 1 interface plug
+%	\node[intfSty, left=0ex of c3.north] (c1) { };
+%	\node[intfContactSty, above right=0ex of c1.south west] (c2) { };
+%	\node[intfContactSty, right=-0.1ex of c2] (c2) { };
+%	\node[intfContactSty, right=-0.1ex of c2] (c2) { };
+%	\node[compSty, above=\netDist of c1.north, align=center] (c2) { \baselineskip=0ex \tiny Java HTTP server \\ \tiny 8080, 8081 \par };
+%	\path[intfConnSty](c1.north) -- (c2);
+%	\node[ruleSty, below=0.5ex of c1] (c88) { \baselineskip=0ex \tiny 10.0.2.2 \par};
+
+	% domain 1 interface plug
+%	\node[intfSty, right=6ex of c3.north] (c1) { };
+%	\node[intfContactSty, above right=0ex of c1.south west] (c2) { };
+%	\node[intfContactSty, right=-0.1ex of c2] (c2) { };
+%	\node[intfContactSty, right=-0.1ex of c2] (c2) { };
+%	\node[compSty, above=\netDist of c1] (c2) { \scriptsize NIC Client };
+%	\path[intfConnSty](c1.north) -- (c2);
+%	\node[ruleSty, below=1ex of c1] { \baselineskip=0ex \tiny 10.0.1.8:8081 \par};
+
+
+%	% domain 1 interface plug
+%	\node[intfSty, left=6ex of c3.south] (c1) { };
+%	\node[intfContactSty, below right=0ex of c1.north west] (c2) { };
+%	\node[intfContactSty, right=-0.1ex of c2] (c2) { };
+%	\node[intfContactSty, right=-0.1ex of c2] (c2) { };
+%	\node[compSty, below=\netDist/2 of c1] (c2) { \scriptsize NIC Driver };
+%	\node[ruleSty, above=3ex of c2] (c4) { \baselineskip=0ex \tiny 10.0.1.5:8080 \par};
+%	\path[intfConnSty](c1.south) -- (c2);
+%	\path[intfConnSty](c4.north) -- (c88.south);
+%
+%	% real network
+%	\node [netSty, below=\netDist/2 of c2] (c5) { };
+%	\node [below=0.5ex of c5.north, opacity=0.7, text width=\netWidth-2ex, align=center] {
+%		\baselineskip=0ex \tiny Physical Network \par};
+%	\path[intfConnSty](c2.south) -- (c5.north);
+%	
+%	% domain 2 interface plug
+%	\node[intfSty, right=6ex of c3.south] (c1) { };
+%	\node[intfContactSty, below right=0ex of c1.north west] (c2) { };
+%	\node[intfContactSty, right=-0.1ex of c2] (c2) { };
+%	\node[intfContactSty, right=-0.1ex of c2] (c2) { };
+%	\node[compSty, below=\netDist/2 of c1] (c2) { \scriptsize NIC Driver };
+%	\node[ruleSty, above=3ex of c2] (c4) { \baselineskip=0ex \tiny 10.0.1.8:8081 \par};
+%	\path[intfConnSty](c1.south) -- (c2);
+%	\path[intfConnSty](c4.north) -- (c88.south);
+%
+%	% real network
+%	\node [netSty, below=\netDist/2 of c2] (c5) { };
+%	\node [below=0.5ex of c5.north, opacity=0.7, text width=\netWidth-2ex, align=center] {
+%		\baselineskip=0ex \tiny Physical Network \par};
+%	\path[intfConnSty](c2.south) -- (c5.north);
+
+
+%	% virtual network 2
+%	\node [netSty, above=-\netHeight/2 of c5] (c5) { };
+%	\node [below=2ex of c5.north, opacity=0.7, align=center] {
+%		\scriptsize\it\sffamily Virtual \\ \scriptsize\it\sffamily Network};
+
+%	% domain 3
+%	\node[domSty, right=\compDist of c3] (c3) { };
+%	\path[intfConnSty] (c3.south) -- (c3.south |- c4);
+%	\path(c3.south west)+(0ex,\domLablHeight) coordinate (c1);
+%	\node[domLablSty, below right=0ex of c1] (c2) { \scriptsize Domain 'Uplink' };
+%	\node[ruleSty, above right=\compDist of c2.north west] (c2) { \tiny DHCP Role };
+%	\node[ruleSty, above=\ruleDist of c2] (c2) { \tiny NAT Rules };
+%	\node[ruleSty, above=\ruleDist of c2] (c2) { \tiny Routing Rules };
+%	\node[ruleSty, above=\ruleDist of c2] (c2) { \tiny IP Config };
+%	\path(c3.north west) coordinate (c1);
+%	\path(c3.north)+(0ex,\netDist) coordinate (c5);
+%
+%	% domain 3 interface plug
+%	\node[intfSty, right=\compDist of c1] (c1) { };
+%	\node[intfContactSty, above right=0ex of c1.south west] (c2) { };
+%	\node[intfContactSty, right=-0.1ex of c2] (c2) { };
+%	\node[intfContactSty, right=-0.1ex of c2] (c2) { };
+%
+%	% nic driver
+%	\node[compSty, above=\compDist*3 of c3] (c2) { \scriptsize NIC Driver };
+%	\path[intfConnSty](c1.north) -- (c1.north |- c2.south);
+%	\path[intfConnSty](c1.north |- c2.north) -- (c1.north |- c5);
+%
+%	% real network
+%	\node [netSty, above=-\netHeight/2 of c5] (c5) { };
+%	\node [below=2ex of c5.north, opacity=0.7, align=center] {
+%		\scriptsize\it\sffamily Physical \\ \scriptsize\it\sffamily Subnet};
+
+\end {tikzpicture}
