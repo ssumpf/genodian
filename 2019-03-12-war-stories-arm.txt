@@ -69,3 +69,6 @@ hit from another address space's text segment, with another ASID. After the TLB
 flush the MMU has to traverse the current page tables and ends up fetching the
 correct physical page - this is why _Kernel: 2_ shows the  _nop_ instruction.
 Our CPU might just have a bug here.
+
+I will omit the fix because sometimes finding a bug is way more interesting then
+fixing it.
