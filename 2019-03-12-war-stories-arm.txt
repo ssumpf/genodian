@@ -1,0 +1,71 @@
+                 System programming - wrestling with hardware
+
+As any system programmer knows, we do have to deal with a lot of uncommon bugs.
+So I like to take the chance to describe one we encountered a few days ago.
+After I had a demonstrator working for an ARM based system on a chip (SoC), the
+scenario suddenly started failing at random instructions at varying addresses
+and also in ever changing components. An example would be an illegal memory
+access (page fault) caused by this ARM instruction:
+
+!blx lr
+
+Wait a minute! _blx_ just jumps to the address provided by the _lr_ register.
+It does not access any memory at all, and therefore, should not raise a page
+fault. If there was a bogus target address in _lr_ another CPU exception would
+be raised (like illegal instruction or a prefetch abort).
+
+The first thing to do in such a case is to reliably reproduce the issue in a
+smaller scenario, making it easier to debug. Unfortunately, I was not able to
+trigger the bug at all in smaller scenarios. Luckily though, I could create one
+image where the page fault always occurred at the same instruction pointer (ip)
+and within the same component. So, I changed the faulting instruction to a _nop_
+instruction (0xe320f000 on ARM) which clearly should not fault. But guess what?
+The _nop_ still raised a read-page fault at 0x1. Next, I double checked the
+opcode at the later faulting ip at program startup:
+
+!ip: 0x10e5ef0 opcode: 0xe320f000
+
+looks good and still a _nop_.
+
+What is going on here? It could not be a memory corruption, since the text
+segment of ELF programs is mapped read-only and any write operation would have
+caused a write-page fault.
+Some time later I instrumented the kernel's page fault handler and read
+the opcode from memory when the faulting ip showed up:
+
+!Kernel: 1: ip 0x10e5ef0 opcode: 0xe5d13000 ptbr: 0x8030404a
+
+Oops, this is not a _nop_! A little instruction decoding showed 0xe5d13000 to be:
+
+!ldrb r3, [r1]
+
+it reads a byte from the address provided in _r1_ which, you just guessed it,
+contained 0x1. Note: at this point it comes in handy to have a kernel developer
+at your side. So what could be the cause? As mentioned above memory corruption
+within the component is out of the question. It could be a device performing
+misguided DMA to physical memory. This is unlikely because this would most
+likely not result in valid opcodes. Maybe  something did update/change the page
+table of the application resulting in a mapping to different physical memory. We
+checked the last point but found that no page table changes had been made to the
+faulting ip's range.
+
+As a last resort we flushed the translation lookaside buffer (TLB) right after
+the _Kernel: 1_ message above and re-read the opcode:
+
+Kernel: 2: ip 0x10e5ef0 opcode: 0xe320f000 ptbr: 0x8030404a
+
+and suddenly we see a _nop_ again and now have a clear picture. The TLB is a
+cache that contains virtual to physical memory translations so the memory
+management unit does not have to traverse page tables for multiple accesses to
+the same page during program execution. In the past the kernel had to flush the
+TLB at any address space switch, so the next address space would not
+accidentally read the physical memory from the previous one when accessing a
+virtual address contained in the TLB. This changed with the introduction of
+address space ids (ASIDs). If a CPU has ASID support an address space switch
+performs a page table as well as an ASID update. The TLB will use the current
+ASID to tag any virtual to physical memory mappings. Therefore, TLB flushes
+during address space switches become unnecessary. What we observe here is a TLB
+hit from another address space's text segment, with another ASID. After the TLB
+flush the MMU has to traverse the current page tables and ends up fetching the
+correct physical page - this is why _Kernel: 2_ shows the  _nop_ instruction.
+Our CPU might just have a bug here.
