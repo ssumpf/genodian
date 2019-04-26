@@ -1,0 +1,195 @@
+              Debugging complex software stacks on Genode Linux
+
+When dealing with large and especially ported software stacks on Genode,
+sophisticated debugging facilities become a must have. One way to achieve this
+is to develop or port your software stacks on Genode Linux and take advantage of
+the GNU Debugger (GDB). Of course this is not possible for low level software,
+like device driver or kernel, but in general useful for anything that does not
+access hardware directly. In this article I will describe a hands on experience
+example on how to debug Java using GDB.
+
+While porting Java I used a run script with a demo Java application that I
+executed on Linux:
+
+!make KERNEL=linux run/java_demo
+
+Suddenly Java triggered a segmentation fault:
+
+![init -> java] OpenJDK 64-Bit Server VM warning: Reserved Stack Area not supported on this platform
+!Kernel: Segmentation fault (signum=11), see Linux kernel log for details
+
+A quick look into the system log revealed
+
+!ld.lib.so[16735]: segfault at 0 ip 00007fc6294094f3 sp 00007fc696dfefa8
+
+the cause to be a memory access at null. The instruction and stack pointers are
+shown, but since Java is a dynamic application with shared libraries that can be
+loaded at arbitrary locations, this information is not sufficient for debugging.
+
+So lets fire up GDB. The way to debug Genode applications is to attach GDB to a
+running Genode component, what makes it necessary to stop the component at a
+well defined state and attach GDB. Usually the _main_ function is a good place
+to stop. Therefore, I added:
+
+!printf("Wait\n");
+!wait_for_continue();
+
+to Java's _main_ function. _wait_for_continue_ stops Java and waits
+for a key press. This is only supported on Linux. After restarting the scenario
+the following output appears:
+
+![init -> java] Wait
+
+Now we open a terminal and go to the _debug_ directory of the Genode build:
+
+!cd <genode-dir>/build/x86_64/debug
+!ln -s ld-linux.lib.so ld.lib.so
+
+We have to create a link from the Linux specific linker name to the generic one,
+since all binaries are linked with the generic name. Next we need to find the
+process ID of Java
+
+! ps -ef | grep java
+! user    24826 24816  0 11:08 pts/7    00:00:00 [Genode] init -> java
+
+and are now able to attach GDB using the id:
+
+!gdb -p 24826 java
+!
+!GNU gdb (Gentoo 8.2 p1) 8.2
+!Copyright (C) 2018 Free Software Foundation, Inc.
+!License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+!This is free software: you are free to change and redistribute it.
+!There is NO WARRANTY, to the extent permitted by law.
+!Type "show copying" and "show warranty" for details.
+!This GDB was configured as "x86_64-pc-linux-gnu".
+!Type "show configuration" for configuration details.
+!For bug reporting instructions, please see:
+!<https://bugs.gentoo.org/>.
+!Find the GDB manual and other documentation resources online at:
+!    <http://www.gnu.org/software/gdb/documentation/>.
+!
+!For help, type "help".
+!Type "apropos word" to search for commands related to "word"...
+!SIGTRAP is used by the debugger.
+!Are you sure you want to change it? (y or n) [answered Y; input not from terminal]
+!Reading symbols from java...done.
+!Attaching to program: /build/x86_64/debug/java, process 24826
+![New LWP 24834]
+![New LWP 24835]
+!pseudo_end () at /home/cbass/backup/src/genode/genode.git/repos/base-linux/src/lib/syscall/spec/x86_64/lx_syscall.S:29
+!29		ret            /* Return to caller.  */
+!(gdb)
+
+We can check if everything is loaded correctly by inspecting shared libraries:
+
+!(gdb) info shared
+!From                To                  Syms Read   Shared Object Library
+!0x00007fcd16c085e0  0x00007fcd16cad954  Yes         ld.lib.so
+!0x0000000001010fa0  0x00000000010298ad  Yes         java.lib.so
+!0x000000000106e260  0x0000000001161034  Yes         libc.lib.so
+!0x00000000011dff70  0x0000000001213e12  Yes         vfs.lib.so
+!0x000000000122b5b0  0x000000000122f41e  Yes         jimage.lib.so
+!0x0000000001236520  0x0000000001241fe5  Yes         jli.lib.so
+!0x0000000001247f40  0x00000000012560cf  Yes         zlib.lib.so
+!0x00000000012611b0  0x000000000126cd32  Yes         jnet.lib.so
+!0x0000000001a30ce0  0x0000000002844677  Yes         jvm.lib.so
+!0x0000000002d3db00  0x0000000002d41e48  Yes         jzip.lib.so
+!0x0000000002d47710  0x0000000002d494f9  Yes         libc_pipe.lib.so
+!0x0000000002d50a40  0x0000000002d6e37c  Yes         libm.lib.so
+!0x0000000002d7bbf0  0x0000000002d83911  Yes         nio.lib.so
+!0x0000000002e10180  0x0000000002f01eaf  Yes         stdcxx.lib.so
+!0x0000000002f4bc20  0x0000000002f4d186  Yes         management.lib.so
+!0x0000000002f52fe0  0x0000000002f6207b  Yes         vfs_lxip.lib.so
+!0x0000000002f9ab40  0x000000000304c6f0  Yes         lxip.lib.so
+
+Java and all its dependencies have successfully been loaded. At this point
+hardware breakpoints (_hbreak_) may be set. Since I want to use the _next_ and _step_
+instructions, which require software breakpoints,
+[https://github.com/ssumpf/genode/commit/4c193030446802cff1a52a859e58d187c9c1121e - this]
+commit has to be applied to the working tree. It is meant for debugging purposes only.
+
+In the first step I want to see a backtrace from where the segmentation fault
+occurred and simply continue.
+
+!(gdb) c
+!Continuing
+
+Switch back to the terminal where Genode is executed and hit <ENTER> to continue
+Java execution.
+
+!Thread 4 "ld.lib.so" received signal SIGSEGV, Segmentation fault.
+![Switching to LWP 25576]
+!0x00007fccb17334f3 in ?? ()
+
+In the GDB terminal the fault can be observed. Lets look at the backtrace:
+
+!(gdb) bt
+!#0  0x00007fccb17334f3 in ?? ()
+!#1  0x0000000000000202 in ?? ()
+!#2  0x0000000000000000 in ?? ()
+
+Now that is not good, because there are no symbols at this address, meaning we
+are in compiled byte code. For demonstration purposes I check another thread:
+
+!(gdb) info threads
+!  Id   Target Id             Frame 
+!  1    LWP 24826 "ld.lib.so" pseudo_end () at /home/cbass/backup/src/genode/genode.git/repos/base-linux/src/lib/syscall/spec/x86_64/lx_syscall.S:29
+!  2    LWP 24834 "ld.lib.so" pseudo_end () at /home/cbass/backup/src/genode/genode.git/repos/base-linux/src/lib/syscall/spec/x86_64/lx_syscall.S:29
+!  3    LWP 24835 "ld.lib.so" pseudo_end () at /home/cbass/backup/src/genode/genode.git/repos/base-linux/src/lib/syscall/spec/x86_64/lx_syscall.S:29
+!* 4    LWP 25576 "ld.lib.so" 0x00007fccb17334f3 in ?? ()
+!  5    LWP 25577 "ld.lib.so" pseudo_end () at /home/cbass/backup/src/genode/genode.git/repos/base-linux/src/lib/syscall/spec/x86_64/lx_syscall.S:29
+!  6    LWP 25578 "ld.lib.so" pseudo_end () at /home/cbass/backup/src/genode/genode.git/repos/base-linux/src/lib/syscall/spec/x86_64/lx_syscall.S:29
+
+There are currently six threads and here is the backtrace of thread 3:
+
+!(gdb) thread 3
+![Switching to thread 3 (LWP 24835)]
+!#0  pseudo_end () at /home/cbass/backup/src/genode/genode.git/repos/base-linux/src/lib/syscall/spec/x86_64/lx_syscall.S:29
+!29		ret            /* Return to caller.  */
+!(gdb) bt
+!#0  pseudo_end () at /home/cbass/backup/src/genode/genode.git/repos/base-linux/src/lib/syscall/spec/x86_64/lx_syscall.S:29
+!#1  0x00007fcd16c3fc45 in lx_recvmsg (flags=0, msg=<optimized out>, sockfd=<optimized out>) at /home/cbass/backup/src/genode/genode.git/repos/base-linux/src/lib/syscall/linux_syscalls.h:163
+!#2  Genode::ipc_call (dst=..., snd_msgbuf=..., rcv_msgbuf=...) at /home/cbass/backup/src/genode/genode.git/repos/base-linux/src/lib/base/ipc.cc:435
+!#3  0x00007fcd16c80b12 in Genode::Capability<Genode::Signal_source>::_call<Genode::Signal_source::Rpc_wait_for_signal> (this=this@entry=0x7fcd16d956b0 <signal_handler_thread()::inst+208>, args=...)
+!    at /home/cbass/backup/src/genode/genode.git/repos/base/include/base/rpc_client.h:141
+!#4  0x00007fcd16c80f27 in Genode::Capability<Genode::Signal_source>::call<Genode::Signal_source::Rpc_wait_for_signal> (this=0x7fcd16d956b0 <signal_handler_thread()::inst+208>)
+!    at /home/cbass/backup/src/genode/genode.git/repos/base/include/base/capability.h:166
+!#5  Genode::Rpc_client<Genode::Signal_source>::call<Genode::Signal_source::Rpc_wait_for_signal> (this=0x7fcd16d956a8 <signal_handler_thread()::inst+200>)
+!    at /home/cbass/backup/src/genode/genode.git/repos/base/include/base/rpc_client.h:192
+!#6  Genode::Signal_source_client::wait_for_signal (this=0x7fcd16d956a8 <signal_handler_thread()::inst+200>) at /home/cbass/backup/src/genode/genode.git/repos/base/src/include/signal_source/client.h:28
+!#7  Genode::Signal_receiver::dispatch_signals (signal_source=signal_source@entry=0x7fcd16d956a8 <signal_handler_thread()::inst+200>) at /home/cbass/backup/src/genode/genode.git/repos/base/src/lib/base/signal.cc:304
+!#8  0x00007fcd16c813ca in Signal_handler_thread::entry (this=0x7fcd16d955e0 <signal_handler_thread()::inst>) at /home/cbass/backup/src/genode/genode.git/repos/base/src/lib/base/signal.cc:47
+!#9  0x00007fcd16c8534a in Genode::Thread::_thread_start () at /home/cbass/backup/src/genode/genode.git/repos/base-linux/src/lib/base/thread_linux.cc:80
+!#10 0x00007fcd16c99d5c in thread_start () at /home/cbass/backup/src/genode/genode.git/repos/base-linux/src/lib/syscall/spec/x86_64/lx_clone.S:62
+
+Looks good and symbols are found. But this does not help with our problem. Lets
+disassemble the faulting instruction pointer:
+
+!(gdb) x/i 0x00007fccb17334f3
+! => 0x7fccb17334f3:	mov    (%rsi),%eax
+
+_rsi_ surely contains zero here, next check the instruction before:
+
+!(gdb) x/i 0x00007fccb17334f1
+!  0x7fccb17334f1:	xor    %rsi,%rsi
+
+Someone clears _rsi_ on purpose! All that is left to do now is to locate the
+code that generates these instructions in the JVM to answer the question of why
+it is generated that way.
+
+At last here a list of my most used GDB commands
+
+* _print_ or _p_ : print variable
+* _x_ : examine memory
+* _break_ or _b_ : break at address, function, or line
+* _continue_ or _c_ : continue execution
+* _next_ or _n_ : step over function
+* _step_ or _s_ : step in function
+* _info registers_ : dump CPU register state
+* _backtrace_ or _bt_ : backtrace from current position
+* _frame_ : switch to specified frame (you _bt_ to display frame numbers)
+* _watch_ : set a watch point which stops when value or locations changed
+* _info threads_ : show currently active threads
+* _thread_ : switch to another thread
+* _layout asm_ : show assembly
