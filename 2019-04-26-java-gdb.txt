@@ -193,3 +193,6 @@ At last here a list of my most used GDB commands
 * _info threads_ : show currently active threads
 * _thread_ : switch to another thread
 * _layout asm_ : show assembly
+
+; tags used by this post
+| gdb debugging linux java
