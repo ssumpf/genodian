@@ -1,0 +1,104 @@
+                     Enablement of Genode's ARMv8 support
+
+ARMv8 introduces a new 64 bit instruction set architecture (ISA). This implies
+that there exists a different general purpose register set as well as new
+instructions and opcodes that are not compatible with ARMv7 or ARMv6. While for
+high level languages like C or C++ the burden of opcode generation is
+transparently handled by the compiler, there are always  cases (e.g, assembly,
+application binary interface, ELF format) that have to be handled specifically
+for each ISA. In this article I will describe the most important adaptions
+required to execute Genode on the ARMv8 architecture.
+
+
+Application startup
+-------------------
+
+The first thing a Genode component does at application startup is to load a
+temporary stack pointer from its BSS segment. Stack pointer loading cannot be
+expressed in C/C++, and therefore, has to be implemented in assembly for each
+architecture. On Genode these operation are implemented within the _crt0.s_
+file. Because most Genode components are linked as dynamic binaries, the stack
+pointer has to be loaded
+[https://docs.oracle.com/cd/E23824_01/html/819-0690/chapter6-74186.html - global offset table]
+relative.
+
+At the end of each _crt0.s_ implementation there is a call (or branch on ARM) to
+Genode's _ _main_ function, in case there are arguments to this function, they must be
+provided in registers _x0-x8_ as defined in the
+[http://infocenter.arm.com/help/topic/com.arm.doc.ihi0055b/IHI0055B_aapcs64.pdf - Procedure Call Standard for the ARM 64-bit Architecture].
+
+
+Compare and exchange
+--------------------
+
+Since Genode supports multithreading, a lock implementation for synchronizing
+access to critical sections becomes necessary. While most of Genode's lock
+implementation is generic, atomic compare and exchange remains architecture
+dependent, because atomic functions are offered by most hardware. On ARMv8
+compare and exchange can be implemented using the Load-Exclusive (_ldxr_) and
+Store-Exclusive (_stxr_) instructions (See:
+[https://developer.arm.com/docs/ddi0487/latest/arm-architecture-reference-manual-armv8-for-armv8-a-architecture-profile - ARM® Architecture Reference Manual ARMv8]).
+
+
+Dynamic linking
+---------------
+
+Dynamic linking also contains processor specific portions. Shared libraries may
+be loaded at arbitrary locations, which requires the dynamic linker to adjust
+(relocate) any absolute addresses within a library. In order to find the
+locations that need to be adjusted, the static linker generates relocations into
+shared libraries and the binary itself. These relocations and the actions to be
+taken are architecture dependent and are described in ELF supplementals. For
+ARMv8 the relocation types are defined in 
+[http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ihi0056c/index.html - ELF for the ARM® 64-bit Architecture (AArch64)]
+and implemented in Genode's
+[https://github.com/genodelabs/genode/blob/master/repos/base/src/lib/ldso/spec/arm_64/relocation.h - dynamic linker].
+
+Lazy binding is when the linker resolves function addresses upon the first call
+to a function. For this the static linker generates special code in the so
+called procedure-linkage table (PLT), that calls an address provided by the
+dynamic linker at runtime and passes the symbol number of the function that has
+just been called. For this to work, the dynamic linker has to save and restore
+registers that are not caller safe (i.e., _x0-x8_, _lr_, _fr_ on ARMv8), resolve
+and call the function. This of course is also specific for ARMv8 and our
+implementation can be found
+[https://github.com/genodelabs/genode/blob/master/repos/base/src/lib/ldso/spec/arm_64/jmp_slot.s - here].
+
+Libc and Libm
+-------------
+
+The basic C libraries of course contain ARMv8 specific code. Our port of the
+FreeBSD libc was outdated and did not contain ARMv8 support. Therefore, we
+updated Genode's libc to
+[http://ftp.freebsd.org/pub/FreeBSD/releases/amd64/12.0-RELEASE/ - FreeBSD-12.0]
+with Genode release
+[https://genode.org/documentation/release-notes/19.05 - 19.05].
+
+The ARMv8 specific libc part consists of platform headers for plain old data
+types (POD) and some structured types, atomic instructions, _setjmp/longjmp_
+support, and floating-point unit (FPU) specific code.
+
+_setjmp/longjmp_ has to save and restore all general purpose and floating point
+registers to function properly and is used by Genode's libc and device-driver
+environment to implement cooperative scheduling.
+
+Floating-point units also vary with each ARM generation and especially libm
+heavily depends on them. On the one hand the kernel is responsible for FPU
+save/restore operations during context switches, but also applications need to
+make sure to respect the calling convention and to implement there assembly
+functions using code for the correct FPU.
+
+Current state
+-------------
+
+Having libc and libm in place allows for building a lot of native and ported
+Genode components already. As the time of writing we started to incorporate
+ARMv8 into our nightly testing infrastructure.
+
+There are still some parts missing, like Genode's port of
+[http://rumpkernel.org - Rump Kernels] or
+[https://gcc.gnu.org/onlinedocs/gcc/Gcov.html - Gcov] support, which we will
+address in the future.
+
+; tags used by this post
+| armv8 platform libc ld
