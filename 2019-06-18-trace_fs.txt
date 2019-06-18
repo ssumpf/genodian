@@ -1,0 +1,37 @@
+                     Tracing support for Genode's VFS
+
+I just published a new _trace_fs_ component within my depot. It announces a file
+system that can be mounted, e.g. to a _noux-system_ instance. The directory
+structure of the file system represents Genode's recursive parent child
+relationship.
+
+To give the component a try, check
+
+! + -> Depot -> Selection -> ssumpf
+
+in your runtime.
+
+Install by selecting
+
+! + -> Depot -> ssumpf -> Tools -> trace fs
+
+Start a noux system instance
+
+! + -> Depot -> genodelabs -> Tools -> noux-system
+
+Route the file system called _target_ to _trace fs_.
+
+Currently there are not many trace points enabled per default within Sculpt. In
+order to add trace points to your application the new _trace_ function can be
+facilitated, it has identical features as _Genode::log_.
+
+!#include <base/log.h>
+!
+!void func()
+!{
+!  unsigned nr = 3;
+!  Genode::trace("This trace point number: ",  nr);
+!}
+
+Instructions for configuring the trace-file system can be found in this
+[https://github.com/ssumpf/genode/blob/vfs_trace_staging/repos/gems/src/lib/vfs/trace/README - README]
