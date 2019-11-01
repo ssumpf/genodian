@@ -1,0 +1,96 @@
+                            Simple tracing within Qemu
+
+I recently discovered Qemu's tracing feature. It is useful for examining the state
+of device models, like interrupt controllers or the CPU, or for observing the
+behavior of guest operating systems. As a simple example, lets enable tracing for
+ARM's interrupt controller called GIC. The device model resides in Qemu in the
+file _hw/intc/arm_gic.c_. In order to find out which trace events exist one can
+either grep for _trace-_ or examine the file _trace_events_ which resides in
+each directory that supports tracing. The file _hw/intc/trace_events_ contains
+the following entries for ARM's GIC:
+
+!# hw/intc/arm_gic.c
+!gic_enable_irq(int irq) "irq %d enabled"
+!gic_disable_irq(int irq) "irq %d disabled"
+!gic_set_irq(int irq, int level, int cpumask, int target) "irq %d level %d cpumask 0x%x target 0x%x"
+!gic_update_bestirq(const char *s, int cpu, int irq, int prio, int priority_mask, int running_priority) "%s %d irq %d priority %d cpu priority mask %d cpu running priority %d"
+!gic_update_set_irq(int cpu, const char *name, int level) "cpu[%d]: %s = %d"
+!gic_acknowledge_irq(const char *s, int cpu, int irq) "%s %d acknowledged irq %d"
+!gic_cpu_write(const char *s, int cpu, int addr, uint32_t val) "%s %d iface write at 0x%08x 0x%08" PRIx32
+!gic_cpu_read(const char *s, int cpu, int addr, uint32_t val) "%s %d iface read at 0x%08x: 0x%08" PRIx32
+!gic_hyp_read(int addr, uint32_t val) "hyp read at 0x%08x: 0x%08" PRIx32
+!gic_hyp_write(int addr, uint32_t val) "hyp write at 0x%08x: 0x%08" PRIx32
+!gic_dist_read(int addr, unsigned int size, uint32_t val) "dist read at 0x%08x size %u: 0x%08" PRIx32
+!gic_dist_write(int addr, unsigned int size, uint32_t val) "dist write at 0x%08x size %u: 0x%08" PRIx32
+!gic_lr_entry(int cpu, int entry, uint32_t val) "cpu %d: new lr entry %d: 0x%08" PRIx32
+!gic_update_maintenance_irq(int cpu, int val) "cpu %d: maintenance = %d"
+
+I will choose to trace _gic_cpu_read_ and _gic_cpu_write_ by writing the event
+names to a file:
+
+!echo gic_cpu_read > /tmp/events
+!echo gic_cpu_write >> /tmp/events
+
+To enable tracing on Genode, add the following to _QEMU_OPT_ in your _build.conf_
+file
+
+!QEMU_OPT += --trace events=/tmp/events
+
+and execute, for example, a Genode run script for an ARM board:
+
+! cd <Genode directory>/build/arm_v7
+! make KERNEL=hw BOARD=pbxa9 run/log
+
+This will produce the following tracing output:
+
+!15452@1572600542.840985:gic_cpu_read cpu 0 iface read at 0x00000004: 0x00000000
+!15452@1572600542.841024:gic_cpu_write cpu 0 iface write at 0x00000004 0x000000ff
+!15452@1572600542.841034:gic_cpu_read cpu 0 iface read at 0x00000008: 0x00000000
+!15452@1572600542.841063:gic_cpu_write cpu 0 iface write at 0x00000008 0x00000007
+!15452@1572600542.841071:gic_cpu_write cpu 0 iface write at 0x00000000 0x00000001
+!15452@1572600542.865729:gic_cpu_read cpu 0 iface read at 0x0000000c: 0x0000001d
+!15452@1572600542.865816:gic_cpu_write cpu 0 iface write at 0x00000010 0x0000001d
+!15452@1572600542.896840:gic_cpu_read cpu 0 iface read at 0x0000000c: 0x0000001d
+!15452@1572600542.896878:gic_cpu_write cpu 0 iface write at 0x00000010 0x0000001d
+
+Qemu also supports wildcards.
+
+! echo gic_* > /tmp/events
+
+will enable all GIC trace points and produce more output like:
+
+!16177@1572600951.108290:gic_set_irq irq 29 level 1 cpumask 0x1 target 0x1
+!16177@1572600951.108303:gic_update_bestirq cpu 0 irq 29 priority 0 cpu priority mask 255 cpu running priority 256
+!16177@1572600951.108310:gic_update_set_irq cpu[0]: irq = 1
+!16177@1572600951.108392:gic_acknowledge_irq cpu 0 acknowledged irq 29
+!16177@1572600951.108403:gic_cpu_read cpu 0 iface read at 0x0000000c: 0x0000001d
+!16177@1572600951.108416:gic_cpu_write cpu 0 iface write at 0x00000010 0x0000001d
+!16177@1572600951.108424:gic_update_bestirq cpu 0 irq 29 priority 0 cpu priority mask 255 cpu running priority 256
+!16177@1572600951.108431:gic_update_set_irq cpu[0]: irq = 1
+!16177@1572600951.108493:gic_set_irq irq 29 level 0 cpumask 0x1 target 0x1
+!16177@1572600951.118627:gic_set_irq irq 29 level 1 cpumask 0x1 target 0x1
+!16177@1572600951.118637:gic_update_bestirq cpu 0 irq 29 priority 0 cpu priority mask 255 cpu running priority 256
+!16177@1572600951.118644:gic_update_set_irq cpu[0]: irq = 1
+!16177@1572600951.118726:gic_acknowledge_irq cpu 0 acknowledged irq 29
+!16177@1572600951.118737:gic_cpu_read cpu 0 iface read at 0x0000000c: 0x0000001d
+!16177@1572600951.118748:gic_cpu_write cpu 0 iface write at 0x00000010 0x0000001d
+!16177@1572600951.118755:gic_update_bestirq cpu 0 irq 29 priority 0 cpu priority mask 255 cpu running priority 256
+!16177@1572600951.118761:gic_update_set_irq cpu[0]: irq = 1
+!16177@1572600951.118802:gic_set_irq irq 29 level 0 cpumask 0x1 target 0x1
+!16177@1572600951.134421:gic_set_irq irq 29 level 1 cpumask 0x1 target 0x1
+!16177@1572600951.134432:gic_update_bestirq cpu 0 irq 29 priority 0 cpu priority mask 255 cpu running priority 256
+!16177@1572600951.134439:gic_update_set_irq cpu[0]: irq = 1
+!16177@1572600951.134523:gic_acknowledge_irq cpu 0 acknowledged irq 29
+!16177@1572600951.134534:gic_cpu_read cpu 0 iface read at 0x0000000c: 0x0000001d
+!16177@1572600951.134545:gic_cpu_write cpu 0 iface write at 0x00000010 0x0000001d
+!16177@1572600951.134552:gic_update_bestirq cpu 0 irq 29 priority 0 cpu priority mask 255 cpu running priority 256
+!16177@1572600951.134559:gic_update_set_irq cpu[0]: irq = 1
+!16177@1572600951.134601:gic_set_irq irq 29 level 0 cpumask 0x1 target 0x1
+!16177@1572600951.188595:gic_set_irq irq 29 level 1 cpumask 0x1 target 0x1
+!16177@1572600951.188815:gic_update_bestirq cpu 0 irq 29 priority 0 cpu priority mask 255 cpu running priority 256
+
+Some Qemu builds might not have tracing enabled per default. In this case Qemu
+needs to be rebuild with the following options:
+
+! configure --enable-trace-backends=simple
+! make
