@@ -25,6 +25,10 @@ the following entries for ARM's GIC:
 !gic_lr_entry(int cpu, int entry, uint32_t val) "cpu %d: new lr entry %d: 0x%08" PRIx32
 !gic_update_maintenance_irq(int cpu, int val) "cpu %d: maintenance = %d"
 
+Additionally,
+!qemu-system-arm --trace help
+can be used to print all available trace events.
+
 I will choose to trace _gic_cpu_read_ and _gic_cpu_write_ by writing the event
 names to a file:
 
