@@ -1,0 +1,145 @@
+
+                      Building a Linux VM image for ARMv8
+
+
+This brief article summarizes the steps necessary to build a runnable Linux
+kernel and _initrd_ disk image that can be executed on  top of Genode's custom
+[https://genode.org/documentation/release-notes/19.11#Virtualization_of_64-bit_ARM_platforms - VMM]
+for i.MX8 platforms.
+
+Prerequisites
+-------------
+
+* Download and install the Genode [https://genode.org/download/tool-chain - tool chain]
+
+* In order build an initial ram disk (i.e., _initrd_) a cross-compile tool chain for
+  ARMv8 is required. We suggest a pre-build tool chain from
+  [https://bootlin.com - Bootlin] featuring the [https://www.uclibc.org - uClibc],
+  for example,
+  [https://toolchains.bootlin.com/downloads/releases/toolchains/aarch64/tarballs/aarch64--uclibc--stable-2018.11-1.tar.bz2 - aarch64--uclibc--stable-2018.11-1.tar.bz2]
+
+* Install the [https://git.kernel.org/cgit/utils/dtc/dtc.git - Open Firmware device tree compiler]
+
+Building the Linux kernel
+-------------------------
+
+# Get and extract the sources
+
+  ! wget https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.19.53.tar.xz
+  !
+  ! tar -xJF linux-4.19.53.tar.xz
+  ! cd linux-4.19.53
+
+# Configure the kernel
+
+  ! make O=../build-linux-aarch64 ARCH=arm64 CROSS_COMPILE=/usr/local/genode-gcc/bin/genode-aarch64- defconfig
+
+# Build the kernel
+
+  ! make O=../build-linux-aarch64 ARCH=arm64 CROSS_COMPILE=/usr/local/genode-gcc/bin/genode-aarch64-
+
+# The kernel image can is located at _build-linux-aarch64/arch/arm64/boot/Image_
+
+Building an initrd using BusyBox
+--------------------------------
+
+# Download and extract [https://www.busybox.net - BusyBox]
+
+  ! wget https://busybox.net/downloads/busybox-1.29.3.tar.bz2
+  !
+  ! tar xjf busybox-1.29.3.tar.bz2
+  ! mkdir build-busybox-aarch64
+  ! cd busybox-1.29.3
+
+# Configure BusyBox
+  ! make O=../build-busybox-aarch64 defconfig
+  ! make O=../build-busybox-aarch64 menuconfig
+  !
+  ! # check this setting in the menu
+  ! [*] Setting ->  Build static binary (no shared libs)
+
+# Compile BusyBox with the installed cross-compile tool chain
+
+  ! cd ../build-busybox-aarch64
+  ! make CROSS_COMPILE=<path-to-tool-chain>/aarch64--uclibc--stable-2018.11-1/bin/aarch64-linux- install -j6
+
+# Useful setups for the ram disk
+
+  ! cd <busbox-build-dir>/_install
+  !
+
+  * create fstab
+  ! <editor> etc/fstab
+  ! none /proc  proc   defaults 0 0
+  ! none /sys   sysfs  defaults 0 0
+
+  * DNS resolution
+  ! echo "nameserver 8.8.8.8" > etc/resolv.conf
+
+  * Run level script using mdev
+  ! <editor> etc/init.d/rcS
+  !
+  ! #/bin/sh
+  !
+  ! mkdir -p /proc
+  ! mkdir -p /sys
+  ! mkdir -p /var/shm
+  ! mkdir -p /var/run
+  ! mkdir -p /var/tmp
+  ! mkdir -p /tmp
+  ! mkdir -p /home/tc
+  ! mkdir -p /root
+  ! mkdir -p /dev
+  !
+  ! /bin/mount -t tmpfs mdev /dev
+  ! mkdir /dev/pts
+  ! /bin/mount -t devpts devpts /dev/pts
+  !
+  ! echo "Mount everything ${1}"
+  ! /bin/mount -a
+  !
+  ! echo /sbin/mdev > /proc/sys/kernel/hotplug
+  ! /sbin/mdev -s
+  ! echo "Finished"
+  ! /bin/sh
+
+
+# Create the initial ram disk using _cpio_
+
+  ! find . | cpio -H newc -o | gzip > ../initrd
+
+# Adjust the device tree information of Genode's VMM
+
+  ! <editor> genode/repos/os/src/server/vmm/spec/arm_v8/virt.dts
+
+# Look for the _chosen_ entry
+
+  !chosen {
+  !  bootargs = "rdinit=/bin/sh";
+  !  linux,initrd-start = <0x42000000>;
+  !  linux,initrd-end   = <0x42113b86>;
+  !  stdout-path = "/pl011@9000000";
+  !};
+
+# Adjust bootargs to use _init__
+  ! bootargs = "init=/sbin/init";
+
+# Adjust the size of the ram disk
+  ! ls -l initrd
+  !
+  ! -rw-r--r-- 1 user user 697657 Jan 29 17:03 initrd
+  !
+
+# Convert size to Hex (0xaa539) and adjust _initrd-end_ accordingly
+
+  ! linux,initrd-end = <0x420aa539>;
+
+# Compile the device tree
+
+  ! dtc <Genode-src>/repos/os/src/server/vmm/spec/arm_v8/virt.dts > <Genode-build-directory>/arm_v8a/bin/dtc
+
+_Have_ _fun!_
+
+; tags used by this post
+| armv8 linux vmm vm
+
