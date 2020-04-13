@@ -3,7 +3,7 @@
 
 In my last [http://genodians.org/ssumpf/2020-02-24-linux-vm - article] I described
 how to build a Linux image that can be executed by Genode's
-[http://genodians.org/skalk/2020-02-25-armv8-virtualization - VMM]
+[http://genodians.org/skalk/2020-04-09-arm-vmm - VMM]
 on i.MX8 platforms. With this article we take things to the next level by
 creating and executing an unmodified Android 10 VM on the i.MX 8M EVK SoC.
 
@@ -121,7 +121,9 @@ controller descriptions in the device tree with Genode's versions.
 Hardware device pass-through
 ----------------------------
 
-Our VMM already supports this feature. For this to work, all the physical
+Our VMM already supports this
+[http://genodians.org/skalk/2020-04-09-arm-vmm - feature].
+For this to work, all the physical
 resources described in the device tree have to be mapped to the exact same
 location within the guest VM, and the correct interrupts have to be injected.
 On i.MX8 DMA memory becomes an issue, because there is no I/O MMU. This means
@@ -131,7 +133,7 @@ have to be mapped one to one by the VMM. As the time of writing, Android can
 already access the most important devices, e.g., SD card, USB, HDMI, and the
 GPU. But other devices, like audio support and the camera are still a work in
 progress.
-; XXX: link to pass through
+
 
 Power management considerations
 -------------------------------
