@@ -19,8 +19,8 @@ reference. So let's start building now:
 * For source code checkout the _repo_ tool is required and must be put in your
   PATH
 
-! curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
-! chmod 755 ~/bin/repo
+  ! curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+  ! chmod 755 ~/bin/repo
 
 * Install Python >= 3.6
 
@@ -32,23 +32,23 @@ reference. So let's start building now:
 
 * Unpack the source code
 
-! tar -xzf imx-android-10.0.0_1.0.0.tar.gz
+  ! tar -xzf imx-android-10.0.0_1.0.0.tar.gz
 
 * Download the public sources, per default the sources are put into
   _~/android_build_. The download size is about 90GB.
 
-! source imx-android-10.0.0_1.0.0/imx_android_setup.sh
-! export MY_ANDROID=~/android_build
+  ! source imx-android-10.0.0_1.0.0/imx_android_setup.sh
+  ! export MY_ANDROID=~/android_build
 
 * Every path from here is relative to MY_ANDROID
 
 * Configure the build environment
 
-! source build/envsetup.sh
+  ! source build/envsetup.sh
 
 * Configure the build for our i.MX8 SoC
 
-! lunch evk_8mq-userdebug
+  ! lunch evk_8mq-userdebug
 
 * Android uses the [https://llvm.org - LLVM] compiler. This is currently not
   supported by NXP. Therefore, the kernel and the bootloader
@@ -58,28 +58,28 @@ reference. So let's start building now:
   We chose _gcc-arm-8.3-2019.03-x86_64-aarch64-elf.tar.xz_. Extract the tool
   chain. And set
 
-! export AARCH64_GCC_CROSS_COMPILE=<tool-chain>/gcc-arm-8.3-2019.03-x86_64-aarch64-elf/bin/aarch64-elf-
+  ! export AARCH64_GCC_CROSS_COMPILE=<tool-chain>/gcc-arm-8.3-2019.03-x86_64-aarch64-elf/bin/aarch64-elf-
 
 accordingly.
 
 * For development we like to network boot Genode scenarios. Per default U-Boot
   only supports small boot image sizes. Therefore, we adjusted:
 
-! CONFIG_SYS_BOOTM_LEN (256 << 20) /* 256 MB */
+  ! CONFIG_SYS_BOOTM_LEN (256 << 20) /* 256 MB */
 
 in _vendor/nxp-opensource/uboot-imx/common/bootm.c_.for the _bootm_ command.
 
 * Build U-Boot
 
-! imx-make.sh -j32 bootloader
+  ! imx-make.sh -j32 bootloader
 
 * Build the Linux kernel
 
-! imx-make.sh -j32 kernel
+  ! imx-make.sh -j32 kernel
 
 * Build the Android user land
 
-! make -j32
+  ! make -j32
 
 * Detailed build logs can be found in _out/verbose.log.*_
 
@@ -91,15 +91,15 @@ In order to the test our Android build we flashed an SD card. For this install
 
 * Go to the build directory of our board:
 
-!  cd out/target/product/evk_8mq
+  ! cd out/target/product/evk_8mq
 
 * Copy the U-Boot binaries
 
-! cp obj/UBOOT_COLLECTION/* .
+  ! cp obj/UBOOT_COLLECTION/* .
 
 * Flash the SD card
 
-! ./fsl-sdcard-partition.sh -f imx8mq /dev/<sdcard>
+  ! ./fsl-sdcard-partition.sh -f imx8mq /dev/<sdcard>
 
 In case the script exists stating the partitions cannot be re-read. Increase the
 value of the _sleep_ command in the script. Insert the SD card into the i.MX8
