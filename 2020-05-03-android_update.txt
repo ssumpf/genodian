@@ -1,0 +1,46 @@
+
+                    An Android VM for ARMv8 _(update)_
+
+This is a follow up on the current state of the
+[http://genodians.org/ssumpf/2020-04-09-android - An Android VM for ARMv8]
+line of work. The article explained how to build Android from source and how to
+execute Android as a virtual machine on Genode. We were able to boot Android
+successfully but still had issues with the camera and the audio devices. As it
+turned out the reason was that these services are 32-bit instead of native
+64-bit ARMv8. Even though, ARMv8 supports both modes, special support
+within the VMM to handle 32-bit ARM on 64-bit ARM (i.e., aarch32) correctly is
+required. Bit mode changes are only allowed between privilege mode switches and
+have to be explicitly enabled for each mode through the _PFR0_ identity
+register (note: identity registers are comparable to x86's _cpuid_).
+Additionally, a switch to 32-bit mode enables the aarch32 instructions set,
+therefore accesses to the co-processor (e.g., _mrc_, _mcr_) have to be either
+allowed or emulated by the VMM. We did just this within our VMM and were able to
+boot Android through to the boot screen. To say the least, the performance was
+horrible, some parts where not even displayed, the wallpaper would vanish etc.
+After some investigation we found that the GPU was not able to allocate enough
+objects (i.e., buffer objects) to display everything correctly. We had given
+Android 1GB of memory, but it seems that these days this is not sufficient.
+Therefore, we expanded the VM's memory to 2GB and everything worked perfectly
+from there on.
+
+As a proof of concept we made a small Android-Q VM bootstrap video. The laptop
+on the left displays the serial output of both the Linux kernel and Genode.
+Right next to it is our i.MX8 development board, connected to a full HD screen.
+In the demo the board fetches a Genode image via network which contains Genode's
+basic services, the Linux kernel, a device tree as well as Android's initial
+ramdisk.  The ramdisk in turn will mount all the Android required partitions
+from the SD card directly (pass-through). Currently, Genode's VMM only supports
+one VCPU, which makes the bootup a little slower, we will address this next, but
+the overall performance is promising even for a single core scenario.
+
+Youtube video link: [https://www.youtube.com/watch?v=BLex8lwjKto - Genode booting Android Q on ARM64]
+
+[image androidq-fs8]
+
+My Genode Android branch can be found
+[https://github.com/ssumpf/genode/tree/android - here].
+
+Cheers!
+
+; tags used by this post
+| armv8 linux vmm vm android
