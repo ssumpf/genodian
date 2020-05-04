@@ -5,8 +5,9 @@ This is a follow up on the current state of the
 [http://genodians.org/ssumpf/2020-04-09-android - An Android VM for ARMv8]
 line of work. The article explained how to build Android from source and how to
 execute Android as a virtual machine on Genode. We were able to boot Android
-successfully but still had issues with the camera and the audio devices. As it
-turned out the reason was that these services are 32-bit instead of native
+successfully but still had issues with the camera and the audio devices.
+
+As it turned out the reason was that these services are 32-bit instead of native
 64-bit ARMv8. Even though, ARMv8 supports both modes, special support
 within the VMM to handle 32-bit ARM on 64-bit ARM (i.e., aarch32) correctly is
 required. Bit mode changes are only allowed between privilege mode switches and
