@@ -35,8 +35,16 @@ to stop. Therefore, I added:
 !wait_for_continue();
 
 to Java's _main_ function. _wait_for_continue_ stops Java and waits
-for a key press. This is only supported on Linux. After restarting the scenario
-the following output appears:
+for a key press. This is only supported on Linux.
+
+In case your run script uses a timeout with the _run_genode_until_ function,
+change it to:
+
+! run_genode_until forever
+
+Otherwise key presses will be ignored.
+
+After restarting the scenario the following output appears:
 
 ![init -> java] Wait
 
