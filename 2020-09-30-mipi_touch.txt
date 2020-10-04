@@ -106,7 +106,7 @@ software then has to wait until the hardware sets the "new divider value
 handshake" bit, and thus, asserts that the PLL's frequency is now stable.  We
 did just that and it changed ... nothing. Further investigation showed that
 Linux accessed two more bits nameley: _PD_ and _CLKE_. The documentation remains
-a little wage on these two:
+a little vague on these two:
 
 ! CLKE: PLL output clock clock gating enable active high
 ! PD  : PLL output clock clock gating enable active high
@@ -135,7 +135,7 @@ would additionally be divided by 10 within the pixel clock. 2.5 MHz are not
 exactly the 120 MHz we aimed for but at least it explained the low display update
 rate. So let's just disable the _BYPASS_ and everything should be fine, said
 no one, because the screen became dark as the night again. Btw. the nice thing
-about OLED display is that they don't have a backlight, so there is no way to
+about OLED displays is that they don't have a backlight, so there is no way to
 check if they are even powered on.
 
 As one can imagine we double and triple checked all our clocks and
@@ -151,7 +151,7 @@ For the purpose of debugging hardware we use a
 [image mipi_jtag-fs8]
   From left to right to front: Power Debug, NXP OLED1 panel, i.MX 8M Quad
 
-The debugger is connected via JTAG to the SoC and via USB a Linux host. With the
+The debugger is connected via JTAG to the SoC and via USB to a Linux host. With the
 host software it is possible to examine RAM, device memory, CPU register, page
 tables, clocks, clock gating, etc. - all in a human readable form.
 
