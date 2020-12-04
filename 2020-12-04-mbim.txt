@@ -1,0 +1,88 @@
+                       LTE modem support for Genode
+
+One of Genode's visions is to support smartphones in the no so distant future.
+After we took care of
+[http://genodians.org/ssumpf/2020-09-30-mipi_touch - touchscreen input] the
+second most important feature of a phone is to drive modems in order to
+provide network connectivity. Modern modems are usually connected via an M.2
+slot to the SoC of the phone and because protocols like LTE have real-time
+demands ship their own real-time capable operating system.
+
+The modem uses the M.2 USB lines that connect directly to the SoC's USB host
+controller, and therefore, a modem will show up as an USB device on the USB
+host. As a reference modem we ordered 
+[http://download-c.huawei.com/download/downloadCenter?downloadId=51048&version=120454&siteCode=&usg=AOvVaw1gOFaCS2g5m9wTYtWshP9N - Huawei's ME906S LTE] modem and an M.2 to
+USB adapter in order to connect the modem quickly to different test machines.
+The setup for our i.MX8 board can be seen below:
+
+[image mbim_modem-fs8]
+  LTE modem connected to i.MX8 board
+
+MBIM vs. QMI
+------------
+
+In the past all modems used the
+[https://en.wikipedia.org/wiki/Point-to-Point_Protocol - Point-to-Point-Protocol (PPP)]
+for data connections, while the actual modem configuration (e.g., PIN entry,
+provider credentials) were configured via
+[https://en.wikipedia.org/wiki/Hayes_command_set - AT commands] through a serial
+device exposed by the modem. Modern modems still support this feature set, but
+also offer more advanced options through different USB configuration profiles in
+order to support the high bandwidth requirements of 3G and above. Currently,
+there are two established standards present. The first is the
+[https://www.usb.org/document-library/mobile-broadband-interface-model-v10-errata-1-and-adopters-agreement - Mobile Broadband Interface Model (MBIM)]
+and the second is the
+[https://en.wikipedia.org/wiki/Qualcomm_MSM_Interface - Qualcomm Mobile Station Interface (QMI)].
+While MBIM is a USB standard QMI is a proprietary standard developed by
+Qualcomm. Both MBIM and QMI use existing Ethernet over USB standards with an
+added control channel. MBIM is in fact the
+[https://en.wikipedia.org/wiki/Ethernet_over_USB - NCM] protocol with an added
+signalling channel while QMI is the
+[https://en.wikipedia.org/wiki/Ethernet_over_USB - ECM] protocol + signalling channel.
+The signalling channel is realized in both cases through a
+[https://www.usb.org/document-library/class-definitions-communication-devices-12 - Wireless Mobile Communication Device]
+where binary MBIM or QMI command packets can be transferred to the modem. So, for
+example, if you connect a modem to a Linux system and set the device
+configuration to the MBIM profile, two devices will appear: First, a wwan
+network interface, and second, a _cdc-wdm_ device. Since, our modem supports the
+MBIM protocol, we will stick to MBIM in the following.
+
+In order to configure the MBIM modem through _cdc_wdm_ tools like
+[https://cgit.freedesktop.org/libmbim/ - libmbim] are available that
+implement the actual MBIM protocol specification and can be used through command
+line tools.
+
+MBIM modem support for Genode
+-----------------------------
+
+For Genode's MBIM support two parts are required: First, the USB modem driver
+that implements NCM and WDM, and second, _libmbim_ that implements the MBIM
+protocol and establishes a connection to the WDM device driver. For this to work
+we ported the MBIM, NCM, and WDM parts from the Linux kernel to Genode using the
+[https://genode.org/documentation/developer-resources/porting_device_drivers - device driver environment]
+and created a new USB driver called _usb_modem_drv_. The USB modem driver sends
+USB requests via Genode's USB session to the host controller driver and
+additionally offers two sessions: First, a Genode Nic-session that transfers
+Ethernet frames to the modem and second, a Terminal-session that directly
+connects to the WDM driver.
+
+With the USB driver ready, we ported _libmbim_ to Genode
+and adapted the _mbimcli_ command to our needs. _mbimcli_ wants to open
+_/dev/cdc_wdm0_, which we mapped through the _vfs_terminal_ plugin to the
+Terminal session of our _usb_modem_drv_. _mbimcli_ will in turn execute a
+packet-service-connection sequence and retrieve the connection settings
+(IP address, gateway, DNS server) from the device via MBIM commands (not DHCP).
+Currently, the connection settings are propagated by _mbimcli_ in form of a
+Report that is consumed as configuration by Genode's NIC router component. In
+the report the modem is configured as "uplink" as can be seen below:
+
+[image mbim_nic_router-fs8]
+  NIC router configuration
+
+This way clients can connect to the NIC router and through the uplink to the
+LTE modem. As a side note, ARP to the gateway has to be explicitly disabled in
+this setup (_use_arp="no"_).
+
+With anything required for MBIM modems in place, we want to add support for
+more modems as well as QMI in the future.
+
