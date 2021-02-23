@@ -2,7 +2,7 @@
 
 [https://genode.org/documentation/articles/riscv - RISC-V support] on Genode has
 been around for five years by now. Our initial RISC-V port to the _base-hw_
-component reached back to the privileged ISA specification
+kernel reached back to the privileged ISA specification
 [https://www2.eecs.berkeley.edu/Pubs/TechRpts/2015/EECS-2015-49.pdf - 1.7] while
 the current stable version is already at
 [https://github.com/riscv/riscv-isa-manual/releases/download/Ratified-IMFDQC-and-Priv-v1.11/riscv-privileged-20190608.pdf - 1.11].
@@ -13,9 +13,9 @@ Unfortunately not much real hardware, besides [https://www.sifive.com - SiFive]
 and FPGA versions, had been around at the time of our development efforts and we
 had to rely on the [https://github.com/riscv/riscv-isa-sim - Spike] emulator.
 Emulators have the disadvantage that they often don't emulate things like caches
-or TLBs of real hardware, so an operating system running on an emulator usually
+or TLBs of real hardware. So an operating system running on an emulator usually
 is not complete. Additionally, the Spike emulator does not offer any peripheral
-hardware making it suitable for proof of concept work only. Therefore, Genode's
+hardware, making it suitable for proof of concept work only. Therefore, Genode's
 RISC-V development had been on a hold for a while.
 
 The situation changed when Genode Labs received a
@@ -26,30 +26,30 @@ version RISC-V processor that implements privileged ISA specification
 and user level ISA
 [https://riscv.org/wp-content/uploads/2016/06/riscv-spec-v2.1.pdf - 2.1].
 Additionally, the SoC offers many peripherals like Ethernet, I2C, SPI, flash
-memory, and JTAG making it suitable for real world Genode workloads.
+memory, and JTAG making it suitable for real-world Genode workloads.
 
 ; TODO: add MIG-V image
 
 In order to support MIG-V, Genode's RISC-V implementation had to be bumped from
-privileged ISA version 1.9.1 to 1.10. During the course of this work we also
-wanted to get rid of the Spike emulator and take advantage of
-[https://www.qemu.org - Qemu's] RISC-V support because all Genode supported CPU
-architectures can already be executed in Qemu, making Spike an additional burden
-to be supported in Genode's build system and testing infrastructure.
+privileged ISA version 1.9.1 to 1.10. During the course of this work, we also
+wanted to replace the Spike emulator and instead take advantage of
+[https://www.qemu.org - Qemu's] RISC-V support. Since all Genode-supported CPU
+architectures can already be executed in Qemu by now, we welcomed the
+chance for consolidation.
 
 ISA 1.10 update
 ---------------
 
-The update to ISA 1.10 went straight forward, next to some additional exceptions
-(like load and store access faults) the biggest change with ISA 1.10 is the
+The update to ISA 1.10 went straight forward. Next to some additional exceptions
+(like load and store access faults), the biggest change with ISA 1.10 is the
 replacement of the "Supervisor Page-Table Base Register" (_sptbr_) with the
-"Supervisor Address Translation and Protection" (_satp_) register. While _sptbr_
+"Supervisor Address Translation and Protection" (_satp_) register. Whereas _sptbr_
 already marked an improvement because it merged the page-table base pointer and
-the address space id into one register - making atomic address space switching
+the address space ID into one register - making atomic address space switching
 easy (please refer to this
 [https://genode.org/documentation/articles/riscv - article] of why this is
-important), _satp_ additionally allows to enable paging and configure the page
-table format in one single operation. With ISA 1.9.1 this  operation had to be
+important), _satp_ additionally allows us to enable paging and configure the page
+table format in one single operation. With ISA 1.9.1, this operation had to be
 performed by the machine mode (M-mode) implementation, which meant paging had to
 be enabled before entering supervisor mode (S-mode) for the first time and
 initial page tables for S-mode were required. This also implied that S-mode
@@ -58,22 +58,22 @@ could not change the page-table format from the one configured by machine mode.
 Machine mode implementation
 ---------------------------
 
-A new ISA also requires an update of the machine mode implementation. Machine
+A new ISA also requires an update of the machine-mode implementation. Machine
 mode handles the boot loading of the platform, receives all
 traps/exceptions/interrupts, and implements the "Supervisor Binary Interface"
 ([https://github.com/riscv/riscv-sbi-doc - SBI]). SBI is meant to hide platform
 specific hardware differences from S-mode. For example, an SBI call is used
 by Genode in order to program the timer. What hardware is used and how the timer
 is programmed is transparently handled by the machine mode implementation
-- relieving Genode from board specific knowledge. While MIG-V offers it's own
-[https://github.com/riscv/opensbi - OpenSBI] compliant machine mode
+- relieving Genode from board-specific knowledge. Whereas MIG-V offers it's own
+[https://github.com/riscv/opensbi - OpenSBI] compliant machine-mode
 implementation, the switch to Qemu made it possible to remove our old
 [https://github.com/ssumpf/bbl-lite - Berkeley Boot Loader] machine
 implementation because Qemu (>=4.2.1) offers OpenSBI firmware when using the
 
 ! -bios default
 
-switch. This way it was possible to unify the SBI interface between Qemu and
+switch. This way, it became possible to unify the SBI interface between Qemu and
 MIG-V.
 
 Genode integration
@@ -84,14 +84,14 @@ generic ISA 1.10 and the Qemu board support can be found within mainline
 [https://github.com/genodelabs/genode - Genode] - starting with release 21.02.
 The MIG-V support has been moved into a separate
 [https://github.com/ssumpf/genode-riscv - repository] that will also contain
-future RISC-V SoCs. The motivation behind this can be found at
+future RISC-V SoCs. The motivation behind this separation can be found at
 [http://genodians.org/nfeske/2021-01-28-pine-fun-kernel-skeleton - Norman's]
 Genodians article under "A new home for board support".
 
 Future
 ------
 
-In the next step we want to implement RISC-V's interrupt controller support
+In the next step, we want to implement RISC-V's interrupt controller support
 ([https://github.com/riscv/riscv-plic-spec/blob/master/riscv-plic.adoc - PLIC])
 in order to enable peripherals. As for Qemu, since we chose the _virt_ platform
 as a target machine,
