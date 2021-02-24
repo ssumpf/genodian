@@ -19,18 +19,20 @@ hardware, making it suitable for proof of concept work only. Therefore, Genode's
 RISC-V development had been on a hold for a while.
 
 The situation changed when Genode Labs received a
-[https://hensoldt-cyber.com/mig-v - MIG-V] development kit from
+[https://hensoldt-cyber.com/mig-v - MiG-V] development kit from
 [https://hensoldt-cyber.com - Hensoldt Cyber]. The board features an ASIC
-version RISC-V processor that implements privileged ISA specification
+version RISC-V logic-encrypted processor that implements privileged ISA
+specification
 [https://riscv.org/wp-content/uploads/2017/05/riscv-privileged-v1.10.pdf - 1.10]
 and user level ISA
 [https://riscv.org/wp-content/uploads/2016/06/riscv-spec-v2.1.pdf - 2.1].
 Additionally, the SoC offers many peripherals like Ethernet, I2C, SPI, flash
 memory, and JTAG making it suitable for real-world Genode workloads.
 
-; TODO: add MIG-V image
+[image riscv_migv-fs8]
+  MiG-V connected to JTAG debugger
 
-In order to support MIG-V, Genode's RISC-V implementation had to be bumped from
+In order to support MiG-V, Genode's RISC-V implementation had to be bumped from
 privileged ISA version 1.9.1 to 1.10. During the course of this work, we also
 wanted to replace the Spike emulator and instead take advantage of
 [https://www.qemu.org - Qemu's] RISC-V support. Since all Genode-supported CPU
@@ -65,7 +67,7 @@ traps/exceptions/interrupts, and implements the "Supervisor Binary Interface"
 specific hardware differences from S-mode. For example, an SBI call is used
 by Genode in order to program the timer. What hardware is used and how the timer
 is programmed is transparently handled by the machine mode implementation
-- relieving Genode from board-specific knowledge. Whereas MIG-V offers it's own
+- relieving Genode from board-specific knowledge. Whereas MiG-V offers it's own
 [https://github.com/riscv/opensbi - OpenSBI] compliant machine-mode
 implementation, the switch to Qemu made it possible to remove our old
 [https://github.com/ssumpf/bbl-lite - Berkeley Boot Loader] machine
@@ -74,7 +76,7 @@ implementation because Qemu (>=4.2.1) offers OpenSBI firmware when using the
 ! -bios default
 
 switch. This way, it became possible to unify the SBI interface between Qemu and
-MIG-V.
+MiG-V.
 
 Genode integration
 ------------------
@@ -82,7 +84,7 @@ Genode integration
 We have split the RISC-V Genode implementation into two parts. First, the
 generic ISA 1.10 and the Qemu board support can be found within mainline
 [https://github.com/genodelabs/genode - Genode] - starting with release 21.02.
-The MIG-V support has been moved into a separate
+The MiG-V support has been moved into a separate
 [https://github.com/ssumpf/genode-riscv - repository] that will also contain
 future RISC-V SoCs. The motivation behind this separation can be found at
 [http://genodians.org/nfeske/2021-01-28-pine-fun-kernel-skeleton - Norman's]
