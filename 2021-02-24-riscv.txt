@@ -66,8 +66,8 @@ traps/exceptions/interrupts, and implements the "Supervisor Binary Interface"
 ([https://github.com/riscv/riscv-sbi-doc - SBI]). SBI is meant to hide platform
 specific hardware differences from S-mode. For example, an SBI call is used
 by Genode in order to program the timer. What hardware is used and how the timer
-is programmed is transparently handled by the machine mode implementation
-- relieving Genode from board-specific knowledge. Whereas MiG-V offers it's own
+is programmed is transparently handled by the machine mode implementation -
+relieving Genode from board-specific knowledge. Whereas MiG-V offers it's own
 [https://github.com/riscv/opensbi - OpenSBI] compliant machine-mode
 implementation, the switch to Qemu made it possible to remove our old
 [https://github.com/ssumpf/bbl-lite - Berkeley Boot Loader] machine
