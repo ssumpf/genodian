@@ -1,0 +1,42 @@
+                      Test driving Sculpt's 3D support
+
+With Sculpt release [https://genode.org/download/sculpt - 21.10] we revived
+Genode's Intel GPU multiplexer which we demonstrated at
+[https://archive.fosdem.org/2018/schedule/event/microkernel_genode_gpu_multiplexing/ - FOSDEM 2018].
+At the time we supported only the Broadwell platform and after many bugfixes,
+the enablement of further Intel Graphics Devices (Skylake, Kaby Lake, ...), the
+update of the [https://www.mesa3d.org/ - Mesa 3D library] to version 21.0.0, and
+many new features, we are happy to announce that 3D acceleration support on
+Sculpt OS has been dramatically enhanced.
+
+In order to test drive 3D acceleration the Mesa part for Intel GPU has to be
+started, this is provided by the 'genodelabs/Mesa 3D/mesa_gpu-intel' package.
+There is also a version for software rendering called 'mesa_gpu-cpu'. With
+Sculpt OS 21.10, Genode's GPU multiplexer is automatically started by the driver-
+manager component. In case the multiplexer issues the following warning during
+startup ('/report/log'):
+
+! No supported Intel GPU detected - no GPU service
+
+You can try to add your card to '/config/gpu_drv' (picture below).
+
+[image mesa_gpu_drv-fs8]
+  Edit "gpu_drv" to add your card if necessary
+
+Next install the
+[https://github.com/glmark2/glmark2 - glmark2]
+packet from the 'cnuke/Demos' depot and route
+the 'mesa_gpu_drv.lib.so' to 'mesa_gpu-intel'.
+
+[image mesa_glmark-fs8]
+  glmark2 configuration
+
+When hitting the 'Add component' button a cat should appear.
+
+[image mesa_cat-fs8]
+  glmark2 cat
+
+In 'cnuke/Mulitmedia' depot there is also a port of
+[https://github.com/yquake2/yquake2 - Yamagi Quake II] which takes advantage of
+3D acceleration, as well as a port of
+[https://dhewm3.org/ - dhewm3] at 'ssumpf'. But more on this another time.
