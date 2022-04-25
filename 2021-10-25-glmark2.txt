@@ -25,7 +25,7 @@ You can try to add your card to '/config/gpu_drv' (picture below).
 
 Next install the
 [https://github.com/glmark2/glmark2 - glmark2]
-packet from the 'cnuke/Demos' depot and route
+packet from the 'ssumpf/Demos' depot and route
 the 'mesa_gpu_drv.lib.so' to 'mesa_gpu-intel'.
 
 [image mesa_glmark-fs8]
