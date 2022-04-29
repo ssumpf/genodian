@@ -1,7 +1,9 @@
                VirtualBox6 3D acceleration _(experimental)_
 
 With Sculpt release [https://genode.org/download/sculpt - 22.04] we enabled
-experimental 3D acceleration support within Genode's VirtualBox6 port.
+experimental 3D acceleration support within Genode's VirtualBox6 port. This
+short guide describes how to try it out.
+
 VirtualBox supports 3D acceleration through the
 [https://www.virtualbox.org/manual/ch03.html#settings-screen - VMWare SVGA]
 graphics device model. On the VMM side this model connects via
