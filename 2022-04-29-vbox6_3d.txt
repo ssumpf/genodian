@@ -1,0 +1,39 @@
+               VirtualBox6 3D acceleration _(experimental)_
+
+With Sculpt release [https://genode.org/download/sculpt - 22.04] we enabled
+experimental 3D acceleration support within Genode's VirtualBox6 port.
+VirtualBox supports 3D acceleration through the
+[https://www.virtualbox.org/manual/ch03.html#settings-screen - VMWare SVGA]
+graphics device model. On the VMM side this model connects via
+[https://www.khronos.org/egl - EGL] to
+[https://www.khronos.org/registry/OpenGL-Refpages/es2.0 - OpenGL ES] which both
+are provided by Genode's
+[https://www.mesa3d.org - Mesa 3D library]. This implies that 3D hardware
+acceleration is available for Intel Graphics Devices (Gen8 - Gen9.5) for
+VirtualBox6 guest operating systems.
+
+In order to test drive VirtualBox's 3D support the SVGA model must be enabled in
+the configuration file (e.g., 'machine.vbox6') configuration file.
+
+For a Linux guest replace:
+
+! <Display VRAMSize="20" monitorCount="1" controller="VBoxSVGA"/>
+
+by
+
+! <Display controller="VMSVGA" VRAMSize="256" accelerate3D="true"/>
+
+For a Windows guest use:
+
+! <Display VRAMSize="128" monitorCount="1" controller="VBoxSVGA" accelerate3D="true"/>
+
+[image vbox63d_cat-fs8]
+  Unbuntu guest running glmark2 and native gears.
+
+On the Sculpt configuration side, the 'GPU' has to set to 'GPU' and
+'ROM (mesa gpu drv lib.so)' to 'mesa gpu-intel' (hardware acceleration)
+or 'mesa gpu-cpu' (software rendering) - as described in our
+[https://genodians.org/ssumpf/2021-10-25-glmark2 - glmark2] article - for the
+'Virtual Machines/vbox6' package.
+
+Have fun testing!
