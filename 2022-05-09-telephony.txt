@@ -242,7 +242,8 @@ connected to the line out. This works analogously to the earpiece, with the exce
 that the speaker amplifier is external on the Pinephone and needs to be enabled
 via a dedicated GPIO pin.
 
-So with everything working it's time for a test call:
+So with everything working it's time for a test call using
+[https://github.com/genodelabs/genode-allwinner/blob/master/run/modem_pinephone.run - this run script]:
 
 _Roger Murdock: We have clearance, Clarence._
 
