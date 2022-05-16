@@ -3,13 +3,13 @@
 
 
 In this article we will describe how we enabled basic telephony support on the
-Pinephone.
+PinePhone.
 
 
 LTE Modem
 ---------
 
-The Pinephone ships with a stock Quectel
+The PinePhone ships with a stock Quectel
 [https://wiki.pine64.org/images/8/82/Quectel_EG25-G_LTE_Standard_Specification_V1.3.pdf - EG-25-G]
 LTE capable modem designed
 for machine to machine communication. Inherently, the
@@ -25,13 +25,13 @@ codecs, audio playback, GPS, and Bluetooth support.
 Firmware
 --------
 
-The firmware is essentially a custom Linux system that Pinephone's Allwinner A64
+The firmware is essentially a custom Linux system that PinePhone's Allwinner A64
 [https://linux-sunxi.org/images/b/b4/Allwinner_A64_User_Manual_V1.1.pdf - SoC]
 can interact with through UART, USB, and PCM interfaces[4]. A speciality
 of the Quectel modem is the support to flash custom firmware into the modem.
 With this feature, it is possible to execute well-known trusted firmware instead
 of opaque binary blobs on the modem. An example of such a firmware is the
-_Pinephone Modem SDK_ as provided by
+_PinePhone Modem SDK_ as provided by
 [https://github.com/Biktorgj/pinephone_modem_sdk - Biktorgj].
 The firmware offers better power-management support because it can scale the CPU
 frequency down to 100MHz (stock firmware is 400MHz) during sleep. Additionally
@@ -84,7 +84,7 @@ handled telephony through the UART interface using AT commands.
 Modem startup
 -------------
 
-As with most SoCs, the modem is not powered during Pinephone's boot process. This
+As with most SoCs, the modem is not powered during PinePhone's boot process. This
 requires manual power-on/off handling by Genode. Important to know is that the
 modem is powered by the battery directly and cannot be started with just the USB
 charger plugged in. The reason for this is that the power consumption of the
@@ -106,7 +106,7 @@ For Genode, we have implemented this behavior in a small component called
 [https://github.com/genodelabs/genode-allwinner/blob/master/src/drivers/modem/pinephone/main.cc - modem manager].
 
 [image telephony_setup-fs8]
-  Experimental modem setup on Genode's Pinephone.
+  Experimental modem setup on Genode's PinePhone.
 
 
 Basic telephony scenario
@@ -136,7 +136,7 @@ If one sees a
 ! > RING
 one can accept the call by
 ! > ATA
-The recommended way to shutdown the modem before the Pinephone is powered off is
+The recommended way to shutdown the modem before the PinePhone is powered off is
 ! AT+QPOWD
 
 With these simple commands, we achieved basic telephony support at an extremely
@@ -169,7 +169,7 @@ and DACL/R are the connection to the analog part of the codec, where the
 recording and playback devices are connected to.
 
 The whole scenario depicted in Figure [telephony_audio_controls-fs8] leads to
-the assumption that the microphone of the Pinephone and the earpiece/speaker can
+the assumption that the microphone of the PinePhone and the earpiece/speaker can
 be routed through simple configuration to and from the modem without the actual
 involvement of the SoC (AIF1). AIF1 exists for playback sounds/music, record
 audio, and handle data connections like video conferencing where data packets
@@ -235,11 +235,11 @@ And voila, the microphone was working on a test phone call.
 
 For the earpiece, in turn, we needed to configure the DAC mixer as an input source,
 enable the amp and unmute the device. This worked out of the box and we were
-able to perform an actual phone call with the Pinephone running Genode.
+able to perform an actual phone call with the PinePhone running Genode.
 
 As a final test, we enabled the speaker for hand-free communication that is
 connected to the line out. This works analogously to the earpiece, with the exception
-that the speaker amplifier is external on the Pinephone and needs to be enabled
+that the speaker amplifier is external on the PinePhone and needs to be enabled
 via a dedicated GPIO pin.
 
 So with everything working it's time for a test call using
