@@ -1,0 +1,58 @@
+
+               Pine fun - Darling I bricked my internal storage
+
+I somehow managed to brick my
+[https://github.com/manjaro-pinephone/phosh/releases - Manjaro] distribution
+running on internal storage (eMMC) on my PinePhone. So, how do I re-install or
+install Genode in the future?
+
+Turns out to be very easy:
+
+* Download SD card image of your choice
+
+  ! wget https://github.com/manjaro-pinephone/phosh/releases/download/beta24/Manjaro-ARM-phosh-pinephone-beta24.img.xz
+
+* Download [https://github.com/dreemurrs-embedded/Jumpdrive/releases - JumpDrive].
+  JumpDrive is a small Linux setup that will export internal storage (eMMC) and
+  external storage (SD card) as USB gadget mass storage devices
+
+  ! wget https://github.com/dreemurrs-embedded/Jumpdrive/releases/download/0.8/pine64-pinephone.img.xz
+
+* Flash JumpDrive on a SD card. Example
+
+  ! unxz -c pine64-pinephone.img.xz | dd of=/dev/<sd-card-device> bs=1M conv=fsync
+
+  (<sd-card-device>: We use a SD card to USB converter and pass it to our
+  VirtualBox guest. For instructions on how to to do this please refer to the
+  [https://genode.org/documentation/articles/sculpt-22-04#Updating_the_USB_boot_device_from_within_VirtualBox - Sculpt] documentation).
+
+* Connect the PinePhone's USB-C port to your machine
+
+* Insert SD card into PinePhone and boot from it. You should see the JumpDrive
+  boot logo 
+[image jumpdrive_boot-fs8]
+
+* The Sculpt _report/log_ should say something like this
+  !usb 1-4: new high-speed USB device number 8 using xhci_hed
+  !usb 1-4: New USB device found, idVendor=1209, idProduct=4201
+  !usb 1-4: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+  !usb 1-4: Product: PinePhone
+  !usb 1-4: Manufacturer: Pine64
+  !usb 1-4: SerialNumber: Jumpdrive
+
+
+* Pass _usb 1-4_ to
+  [https://genode.org/documentation/articles/sculpt-22-04#Updating_the_USB_boot_device_from_within_VirtualBox - VirtualBox]
+
+* Load the _g_mass_storage.ko_ kernel module within your guest Linux
+  ! modprobe g_mass_storage
+
+* The log message output should show
+[image jumpdrive_linux-fs8]
+
+* Pinephone's internal storage is 32GB so
+
+  ! unxz -c Manjaro-ARM-phosh-pinephone-beta24.img.xz | dd of=/dev/sdb bs=1M conv=fsync
+  does the trick.
+
+* Reboot and have fun!
