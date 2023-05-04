@@ -1,0 +1,498 @@
+
+           Pine fun - App development or the quest for an SDK
+
+In this article we will describe our approach and reasoning of how we want to
+support app development on the PinePhone for Genode enthusiasts.
+
+The bars for application development for a Genode-based mobile phone should be
+as low as possible. Application developers do not want to struggle with the
+intrinsics of the Genode system too much, but require an environment where they
+can prototype and test their projects quickly using familiar interfaces and
+frameworks. Nevertheless, the SDK should offer the capability to tightly couple
+it to Genode development if needed.
+
+Because the requirements of established SDKs (Android, iOS) are currently out of
+reach regarding  Genode's development resources, we looked for alternative
+open-source SDKs that have been deployed on mobile phones. When thinking of open
+source and phone, three projects come immediately to mind: Firefox OS,
+[https://ubuntu-touch.io - Ubuntu Touch], and
+[https://sailfishos.org - Sailfish OS]. Whereas Firefox OS has been abandoned,
+its fork [https://www.kaiostech.com - KaiOS] has become the predominant
+operating system on the feature-phone market. Both Ubuntu Touch and Sailfish
+OS have/had smartphone support at various stages. Therefore, we will examine
+both SDKs and find out how well they are suited for the Genode environment in this
+article. First, we will perform an assessment (apps, tools, dependencies, build
+environment, workflows) for each SDK, and second, we will describe how and what
+parts of each SDK can be integrated into the Genode ecosystem.
+
+
+Ubuntu Touch
+------------
+
+*History*
+
+The project was started by Canonical Ltd. around 2011 and is based on the Ubuntu
+Linux distribution. In contrary to other projects, Ubuntu Touch always aimed at
+so called convergence, meaning the project should run unmodified on a diverse
+range of appliances, like smartphones, TVs, watches, and tablets. This goal was
+never reached and Ubuntu Touch saw limited releases on smartphones (Samsungs
+Galaxy Nexus) and tablets (BQ Aquarius M10).
+
+In 2017 Canonical terminated support of Ubuntu Touch and development was taken
+over by the [https://ubports.com - UBPorts] open-source community, which is
+active to this day. As of today, smartphone releases are among others available
+for the [https://www.pine64.org/pinephone - PinePhone] and the
+[https://puri.sm/products/librem-5 - Librem 5].
+
+
+*Ecosystem*
+
+[image sdk_openstore-fs8]
+  Ubuntu Touch - OpenStore
+
+Ubuntu Touch offers an official app store through
+[https://open-store.io - OpenStore]. It is pre-installed for all builds. We have
+counted around 1000 apps in the store as of 2023. The app store differentiates
+between apps and web apps, where
+[https://docs.ubports.com/en/latest/appdev/nativeapp/index.html - apps] refer to
+native applications running on your device and
+[https://docs.ubports.com/en/latest/appdev/webapp/index.html - Web apps] are
+applications that are hosted online running inside a webview of the web
+engine.
+
+Next to basic applications like calendar, calculator, music player, gallery,
+clock, etc., there are a few more interesting ones like a native
+[https://open-store.io/app/nl.btr.jitsi - Jitsi] client, an unofficial
+[https://open-store.io/app/nl.btr.telegram - Telegram] client, the
+[https://open-store.io/app/nl.btr.element - Element] Matrix client, and
+[https://open-store.io/app/pure-maps.jonnius - Pure Maps] - a map and
+navigation software that was originally developed for Sailfish OS.
+The official browser of Ubuntu Touch is the QtWebEngine based
+[https://ubports.com/pl/members/tag/morph-browser-14 - Morph Browser].
+
+
+*Application structure*
+
+Ubuntu Touch applications consist of two parts. First, the user interface and
+second, the program or business logic. The user interface is based on
+[https://www.qt.io - Qt] and implemented in
+[https://en.wikipedia.org/wiki/QML - QML] and C++ by the
+[https://github.com/ubports/ubuntu-ui-toolkit - Ubuntu UI toolkit].
+While QML gives the ability to create graphical applications, it lacks support
+for basic builtin components like buttons, sliders, scrollbars, etc. and this is
+exactly what the toolkit provides. This way an Ubuntu Touch application
+implements it's user interface in QML interfacing the UI toolkit.
+
+The program logic can be written in QML, C++, JavaScript, Python, Rust, or
+Go and use Linux infrastructure (like DBus) and Linux libraries present on the
+system.
+
+
+*SDK*
+
+The SDK itself consists of a docker image. The image contains the complete
+Linux infrastructure (compilers, toolkits, and libraries) needed to build an
+Ubuntu Touch application for ARMv7, ARMv8, and x86_64. Application creation
+through the docker image and deployment is handled through the command-line
+interface.
+
+
+*Command line interface*
+
+The command line tool to compile and deploy Ubuntu Touch apps is called
+[https://clickable-ut.dev/en/latest - Clickable] which can be installed as a
+packet on Ubuntu. The following command downloads the necessary docker container:
+
+!$ clickable setup
+
+Example of a basic work flow to create an app:
+
+* Create a project and choose template, name of app, ...
+  !$ clickable create
+  | 1 - QML Only
+  |
+  | 2 - C++
+  |
+  | 3 - Python
+  |
+  | 4 - HTML
+  |
+  | 5 - Go
+  |
+  | 6 - Rust
+  |
+  | 7 - Godot (Precompiled)
+
+* Build app, this starts the docker image, compiles the app, and deploys the app
+  on a connected device using ADB utilities:
+  !$ clickable
+
+* To only compile the app:
+  !$ clickable build
+
+* During development the app can be deployed and executed in the docker image:
+  !$ clickable desktop
+
+[image sdk_ubuntu-clock-fs8 30%]
+  Clock App running via the SDK's docker image
+
+
+*IDE integration*
+
+The docker image contains a version of QtCreator that supports run/debug facilities
+and commodities like auto completion:
+
+!$ clickable ide qtcreator
+
+
+*Package format*
+
+Ubuntu Touch implements its own package format called
+[https://docs.ubports.com/en/latest/appdev/platform/click.html - Click] which
+seems to be heavily inspired by the
+[https://click.readthedocs.io/en/latest/file-format.html - deb] format.
+
+
+*API documentation*
+
+Documentation of the UI interface (QML and HTML5) is publicly
+[https://api-docs.ubports.com/sdk/apps/qml/index.html - available].
+
+
+Sailfish OS
+-----------
+
+*History*
+
+The history of Sailfish OS is a little more troubled. It originates at Nokia and
+Intel. Around the mid-2000s Nokia had built it's Debian/Linux based
+[https://maemo.org - Maemo] for smartphones and tablets. Intel at the same time
+worked on [http://moblin.org - Moblin] a Linux distribution aimed at Intel Atom
+based netbooks and embedded devices. In 2010 Intel and Nokia joined forces and
+created the 
+[https://web.archive.org/web/20110908211437/https://meego.com - MeeGo] project 
+out of Maemo and Moblin primarily targeted at smartphones and tablets.  Nokia
+aimed to use MeeGo as it's primary smartphone operating system.  But with the
+dominance of iOS and Android already in place (by 2011) and the acquisition of
+Nokia by Microsoft, the MeeGo project came to a full stop. A year later,
+community-driven development was resumed with a fork named Mer (MEego Relaunched).
+Because of Microsoft pushing Windows Phone on Nokia devices, former Nokia
+engineers setup their own company called [https://jolla.com - Jolla Ltd.] in
+2011 and began with the development of Sailfish OS - a fork of Mer. In 2020
+Jolla took over the Mer project and renamed it to
+[http://merproject.org - Sailfish OS].
+
+In contrast to Ubuntu Touch, Sailfish OS contains proprietary parts, like the
+Android compatibility layer or its graphical user interface.
+
+As of 2023, Sailfish OS supports a range of Sony
+[https://docs.sailfishos.org/Support/Supported_Devices - Xperia] devices.
+Additionally there exists an unofficial port for the
+[https://wiki.pine64.org/wiki/PinePhone_Software_Releases#Sailfish_OS - PinePhone].
+
+
+*Ecosystem*
+
+
+Sailfish OS features the Jolla Store app on it's phone/tablets. Unfortunately,
+there is no web interface available, so a Sailfish device is required to inspect
+the contents of the store, and therefore, we are not able to compare it to
+Ubuntu's OpenStore.  Sailfish heavily advertises it's Android application
+compatibility layer (proprietary implementation of the Dalvik VM), so most
+non-Google Android applications can be installed.
+
+An app store alternative is offered by [https://openrepos.net -  OpenRepos].
+Notable apps are
+[https://openrepos.net/content/werkwolf/fernschreiber - Fernschreiber] a
+unofficial Telegram client,
+[https://openrepos.net/content/rubdos/whisperfish - Whisperfish] a unofficial
+Signal client, and [https://openrepos.net/content/rinigus/pure-maps - Pure Maps]
+original navigation and maps (also available for Unbuntu Touch). As with Ubuntu
+Touch, there are many Linux tools like WireGuard, shells, media players, etc.
+
+As an interesting side note, Sailfish OS implements it's own open source
+[https://github.com/sailfishos/sailfish-browser - browser] based on the
+[https://web.archive.org/web/20180830103541/http://blog.idempotent.info/posts/whats-behind-sailfish-browser.htm - Gecko engine].
+
+
+*Application structure*
+
+Like Ubuntu Touch, Sailfish OS is a Linux-based operating system. The
+proprietary user interface [https://sailfishos.org/develop/docs/silica - Silica]
+is QML/C++ based, offers a sophisticated widget set, and is programmed  through 
+a QML API. The program logic can be implemented in C++, Python,
+or - experimentally - in Rust.
+
+
+*SDK*
+
+The [https://docs.sailfishos.org/Tools/Sailfish_SDK - Sailfish SDK] needs to
+be installed on your system and is available for Linux/Windows/OSX. Applications
+can be built for ARMv7, ARMv8, and 32-bit x86. The SDK contains two VirtualBox VMs.
+One for building - using the Mer SDK - and the other one is an x86 Sailfish OS
+installation used for testing and deploying applications. Data transfer for
+compilation and testing is achieved through VirtualBox' shared folders between
+the SDK and the VMs. Because building and testing is based on VirtualBox VMs, the
+SDK can be installed on Linux, Windows, and Mac OS. Optionally, the build step can be
+performed in a
+[https://docs.sailfishos.org/Tools/Sailfish_SDK/Installation/#virtualization-platform - Docker]
+container on Linux or Windows. Similar to Ubuntu Touch, Sailfish ships a command-line
+interface to compile and deploy applications.
+
+
+*Command line interface*
+
+Sailfish provides the _sfdk_ command line interface.
+
+Examples of a basic work flow to compile an app:
+
+* Choose the build target:
+  !$ sfdk tools list
+  | SailfishOS-4.4.0.58
+  |
+  | -- SailfishOS-4.4.0.58-aarch64
+  |
+  | -- SailfishOS-4.4.0.58-armv7hl
+  |
+  | -- SailfishOS-4.4.0.58-i486
+
+* For the emulator target choose:
+  !$ sfdk config target=SailfishOS-4.4.0.58-i486
+
+* Retrieve sample application:
+  !$ git clone https://github.com/mikkosyrja/speedcrunch-sailfish.git
+
+* Build:
+  !$ mkdir speedcrunch.build.i486 && cd speedcrunch.build.i486
+  !$ sfdk build ../speedcrunch
+
+* List available devices:
+  !$ sfdk device list
+  | #0 "Sailfish OS Emulator 4.4.0.58"
+  |
+  | #1 "Xperia 10 - Dual SIM (ARM)"
+
+* Configure SDK for the development using the emulator:
+  !$ sfdk config device="Sailfish OS Emulator 4.4.0.58"
+
+* Deploy:
+  !$ sfdk deploy --sdk
+
+[image sdk_speedcrunch-fs8 30%]
+  Sailfish app in VirtualBox emulator
+
+* Execute or debug application from command line:
+  !$ sfdk device exec /usr/bin/cmakesample
+  !$ sfdk debug /usr/bin/cmakesample
+
+* Configure for device:
+  !$ sfdk config device="Xperia 10 - Dual SIM (ARM)"
+  !$ sfdk config target=SailfishOS-4.4.0.58-armv7hl
+
+
+*IDE integration*
+
+The SDK features a custom tailored
+[https://github.com/sailfishos/sailfish-qtcreator - QtCreator] that integrates
+deeply with Sailfish. It offers application templates, building, debugging,
+and deployment facilities and is the preferred way to develop Sailfish
+applications.
+
+
+*Package format*
+
+Sailfish applications builds produce packages in the classic
+[https://rpm.org - RPM] format.
+
+
+*Documentation*
+
+Documentation of the Silica API as well as for various other APIs is publicly
+[https://docs.sailfishos.org/Develop/Apps/#api-documentation - available].
+
+
+Genode SDK deployment
+---------------------
+
+As described above Ubuntu and Saiflish apps are for the most part native
+Linux/POSIX applications with a custom Qt/QML based graphical user interface.
+This implies that apps can, for the most part, be executed directly on top of
+Genode's POSIX environment, while the respective UI parts (Ubuntu UI toolkit and
+Sailfish Silica) will have to be ported to Genode. There may be additional
+native or Qt libraries that require porting to Genode, but this has to be
+decided on a per-app basis. Genode will not rely on a docker container or a VM
+image. The only requirements are the Genode tool chain, Genode's Qt tool chain,
+and optionally Genode's source code, while it should be possible to build an app
+without the sources. Additionally, since many apps are written in Python 3 on
+both platforms, extending Genode's
+[https://github.com/genodelabs/genode-world/tree/master/src/app/python3 - Python]
+port with modules required by the SDKs/apps would enable additional
+possibilities.
+
+
+*Ubuntu UI toolkit*
+
+Porting the toolkit to Genode was a straight forward experience. The toolkit
+required slight patches in order to be adjusted to Genode. This concerned mostly
+removing D-Bus dependencies, minor changes to platform specific code, as well as
+the addition of a Genode API (headers, specs), which we add to all Qt-libraries.
+The library is built using Qt infrastructure (qmake) with minor changes
+to Qt's project file. 
+
+A real world example using the toolkit is the port of the Morph browser -
+official Ubuntu Touch browser - that runs already on Genode on the PinePhone.
+
+
+*Sailfish Silica*
+
+For Sailfish, the situation is a little more complicated because Silica is partly
+proprietary, meaning the QML part is available within the SDK and mostly has a
+BSD license, but the C++ part, that is written as a QML plugin
+([https://forum.sailfishos.org/t/silica-components-license-and-source-code/3561 - libsailfishsilicaplugin.so])
+and interfaced from
+[https://doc.qt.io/qt-5/qtqml-cppintegration-topic.html - QML code], is not open
+source.
+
+Therefore, we tried to implement the plugin ourselves by reverse engineering the
+function calls from Silica QML code to C++ and the signals sent from C++ to
+Silica QML. Thereby we generated over 2000 lines of C++ dummy code that already
+covers most of the expected interface and got to the point where a test Saiflish
+application compiled (QML code) at runtime and started to execute. We noticed
+that many of the fancy looking effects like transparency, animations, or blending
+have to be implemented on the C++ side. This is feasible but a significant
+effort. Once we got to the point where the application wanted to load icons from
+the Sailfish
+[https://sailfishos.org/develop/docs/jolla-ambient - icon library] and it became
+clear that this icon library (1000+ icons) is also proprietary, we stopped our
+investigation because replacing this with some meaningful and decent looking
+icon set is beyond the reach of our possibilities. We presume that linking
+existing apps - that were developed using the proprietary Sailfish parts after
+all - against our mockup of those proprietary parts will do injustice to the app
+developers by spoiling the visual appearance of their applications.
+
+
+*Application structure*
+
+Our vision is that Genode applications can be developed without the need to have
+the Genode framework installed and without the need to build a complete testing
+environment for app development by the developer. Testing should be easy on the
+development machine, to allow for low iteration times, as well as on the target
+device. The testing environment setup can easily be achieved by Genode's package
+management system and pre-built packages can be published to a depot alongside
+each Genode release.
+
+A tool that manages third party standalone code compilation, the download of
+dependencies and that offers a testing environment on Linux is already available
+with the
+[https://genodians.org/nfeske/2019-11-25-goa - Goa] project. We have setup an
+exemplary build environment for the Ubnutu UI toolkit that demonstrates building
+and testing QML/C++ based Ubuntu Touch apps.
+
+
+*SDK*
+
+; Note: The Genode Qt tool chain is not available for download
+; Should we provide an archive with all three?
+
+The Genode SDK consists of the Genode
+[https://genode.org/download/tool-chain - tool chain], the Qt5 tool chain, and
+the [https://github.com/nfeske/goa - Goa] tool.
+
+
+*Command line interface*
+
+; Missing: How to deploy on phone
+; Missing: Build for ARMv8
+
+The Goa tool functions a lot like _sfdk_ and _clickable_ and acts as the central
+project management unit. It runs on Linux.
+
+Here is a example development workflow using Goa:
+
+* Obtain Goa:
+  !$ git clone https://github.com/ssumpf/goa-projects.git
+
+* Add the _bin/goa_ command to your _PATH_
+
+* Download demo scenario:
+  !$ git clone https://github.com/ssumpf/goa-projects.git
+
+* Under _ubuntu_ui_toolkit_gallery_ there is the standard Ubuntu Touch widget
+  set scenario, it only provides a runtime and no source code and downloads a
+  pre-built package.
+  !$ cd ubuntu_ui_toolkit_gallery
+  !$ goa run
+  The _run_ command will download needed packages as well as the packages used
+  by the test environment.
+
+[image sdk_ubuntu-gallery-fs8]
+  Ubuntu Touch gallery example executed by Goa
+
+* A minimal QML example can be found under _unit-convert_:
+  !$ cd unit-convert
+  !$ goa build      # archives the QML code
+  !$ goa run        # execute
+
+* A C++ QtQuick example is also available. This infrastructure can be used to
+  interface C++ from QML
+  !$ cd qt5_quicktest
+  !$ goa build      # compiles and links the binary
+  The binary is not linked against actual libraries, but to ABI archives (symbol
+  files). Only when the binary is executed, the actual libraries are required.
+
+* A packet can be [https://genodians.org/nfeske/2020-01-16-goa-publish - published]
+  (signed and archived), and thus, becomes ready to be uploaded to a public depot:
+  !$ goa add-depot-user joe \     # add developer joe to project
+  !  --depot-url "https://your-depot-domain"\
+  !  --pubkey-file <GPG-key>
+  !$ goa publish --depot-user joe # publish project as joe
+
+
+The Goa environment can also be linked to a Genode repository, where it looks
+for missing packages before trying to download them. This is useful when
+developing or debugging dependencies on Genode in parallel.
+
+
+*IDE integration*
+
+By interacting with the Goa tool, basic build and execution steps could be
+integrated into QtCreator or some other IDE that supports external tooling.
+
+
+*Package format*
+
+Genode packages are signed and XZ compressed archives. There exist different
+kinds of archives (Raw, API, Source, Binary, Package). Please refer to Genode's
+[https://genode.org/documentation/developer-resources/package_management - package management]
+documentation for a detailed description.
+
+
+Afterthoughts
+-------------
+
+We investigated the fitness of both Ubuntu Touch and the Sailfish SDK as an app
+development API for Genode. While the ecosystem and development environments of
+both SKDs look similar, Sailfish's Silica contains proprietary parts that would
+have to be implemented or designed by us. While this approach is feasible and
+Silica definitely has a very slick and professionally looking UI (compared to
+Ubuntu or Genode), this approach would lead to a serious development effort with
+an unclear outcome. It would most likely be feature incomplete and would introduce
+additional development efforts by keeping up to date with Sailfish OS
+developments. Ubuntu Touch apps can be brought to Genode through the Ubuntu
+UI toolkit with significantly less effort. The tool kit has been renamed to
+[https://gitlab.com/ubports/development/core/lomiri-ui-toolkit - Lomiri UI toolkit]
+and is actively developed by the UBPorts community. Most apps available for
+Sailfish OS are available or have a similar app on Ubuntu Touch, with the
+exception of Whisperfish (Signal client).  Additionally, Jolla seems to push its
+Android compatibility layer support more aggressively (it became its own
+[https://jolla.com/appsupport - business]), which may lead third party and
+open-source developers to question their efforts writing native Sailfish apps.
+
+In this article we have demonstrated how to integrate a small part of the Ubuntu
+Touch SDK (the UI) into the Genode universe. As a result, official demonstrator
+apps can be executed on Genode with no modifications needed. The subsequent
+natural step would be the porting of an advanced real-world app to the
+Genode/Ubuntu Touch/Lomiri SDK, analyzing what additional bits and pieces are
+required by the programming logic (Linux libraries and infrastructure) to bring
+it to life on Genode.
+
