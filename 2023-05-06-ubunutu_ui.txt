@@ -407,12 +407,18 @@ the [https://github.com/nfeske/goa - Goa] tool.
 The Goa tool functions a lot like _sfdk_ and _clickable_ and acts as the central
 project management unit. It runs on Linux.
 
-Here is a example development workflow using Goa:
+Here is an example development workflow using Goa:
 
 * Obtain Goa:
-  !$ git clone https://github.com/ssumpf/goa-projects.git
+  !$ git clone https://github.com/genodelabs/goa.git
 
 * Add the _bin/goa_ command to your _PATH_
+
+* Currently the Qt5 tool chain has to be build by hand, it will be included as
+  part of the Genode tool chain with release 23.05.
+  !$ cd <genode-sources>
+  !$ ./tool/tool_chain_qt5 build
+  !$ ./tool/tool_chain_qt5 install
 
 * Download demo scenario:
   !$ git clone https://github.com/ssumpf/goa-projects.git
