@@ -101,7 +101,7 @@ interface.
 
 The command line tool to compile and deploy Ubuntu Touch apps is called
 [https://clickable-ut.dev/en/latest - Clickable] which can be installed as a
-packet on Ubuntu. The following command downloads the necessary docker container:
+package on Ubuntu. The following command downloads the necessary docker container:
 
 !$ clickable setup
 
@@ -168,17 +168,17 @@ The history of Sailfish OS is a little more troubled. It originates at Nokia and
 Intel. Around the mid-2000s Nokia had built it's Debian/Linux based
 [https://maemo.org - Maemo] for smartphones and tablets. Intel at the same time
 worked on [http://moblin.org - Moblin] a Linux distribution aimed at Intel Atom
-based netbooks and embedded devices. In 2010 Intel and Nokia joined forces and
-created the 
+based netbooks and embedded devices. In 2010, Intel and Nokia joined forces and
+created the
 [https://web.archive.org/web/20110908211437/https://meego.com - MeeGo] project 
 out of Maemo and Moblin primarily targeted at smartphones and tablets.  Nokia
-aimed to use MeeGo as it's primary smartphone operating system.  But with the
+aimed to use MeeGo as its primary smartphone operating system.  But with the
 dominance of iOS and Android already in place (by 2011) and the acquisition of
 Nokia by Microsoft, the MeeGo project came to a full stop. A year later,
 community-driven development was resumed with a fork named Mer (MEego Relaunched).
 Because of Microsoft pushing Windows Phone on Nokia devices, former Nokia
 engineers setup their own company called [https://jolla.com - Jolla Ltd.] in
-2011 and began with the development of Sailfish OS - a fork of Mer. In 2020
+2011 and began with the development of Sailfish OS - a fork of Mer. In 2020,
 Jolla took over the Mer project and renamed it to
 [http://merproject.org - Sailfish OS].
 
@@ -196,21 +196,21 @@ Additionally there exists an unofficial port for the
 
 Sailfish OS features the Jolla Store app on it's phone/tablets. Unfortunately,
 there is no web interface available, so a Sailfish device is required to inspect
-the contents of the store, and therefore, we are not able to compare it to
+the contents of the store, and therefore, we were not able to easily compare it to
 Ubuntu's OpenStore.  Sailfish heavily advertises it's Android application
 compatibility layer (proprietary implementation of the Dalvik VM), so most
 non-Google Android applications can be installed.
 
 An app store alternative is offered by [https://openrepos.net -  OpenRepos].
 Notable apps are
-[https://openrepos.net/content/werkwolf/fernschreiber - Fernschreiber] a
+[https://openrepos.net/content/werkwolf/fernschreiber - Fernschreiber] an
 unofficial Telegram client,
-[https://openrepos.net/content/rubdos/whisperfish - Whisperfish] a unofficial
+[https://openrepos.net/content/rubdos/whisperfish - Whisperfish] an unofficial
 Signal client, and [https://openrepos.net/content/rinigus/pure-maps - Pure Maps]
 original navigation and maps (also available for Unbuntu Touch). As with Ubuntu
 Touch, there are many Linux tools like WireGuard, shells, media players, etc.
 
-As an interesting side note, Sailfish OS implements it's own open source
+As an interesting side note, Sailfish OS implements its own open source
 [https://github.com/sailfishos/sailfish-browser - browser] based on the
 [https://web.archive.org/web/20180830103541/http://blog.idempotent.info/posts/whats-behind-sailfish-browser.htm - Gecko engine].
 
@@ -301,7 +301,7 @@ applications.
 
 *Package format*
 
-Sailfish applications builds produce packages in the classic
+Sailfish application builds produce packages in the classic
 [https://rpm.org - RPM] format.
 
 
@@ -323,7 +323,7 @@ native or Qt libraries that require porting to Genode, but this has to be
 decided on a per-app basis. Genode will not rely on a docker container or a VM
 image. The only requirements are the Genode tool chain, Genode's Qt tool chain,
 and optionally Genode's source code, while it should be possible to build an app
-without the sources. Additionally, since many apps are written in Python 3 on
+without the Genode sources. Additionally, since many apps are written in Python 3 on
 both platforms, extending Genode's
 [https://github.com/genodelabs/genode-world/tree/master/src/app/python3 - Python]
 port with modules required by the SDKs/apps would enable additional
@@ -376,9 +376,9 @@ developers by spoiling the visual appearance of their applications.
 Our vision is that Genode applications can be developed without the need to have
 the Genode framework installed and without the need to build a complete testing
 environment for app development by the developer. Testing should be easy on the
-development machine, to allow for low iteration times, as well as on the target
+development machine, to allow for quick iteration times, as well as on the target
 device. The testing environment setup can easily be achieved by Genode's package
-management system and pre-built packages can be published to a depot alongside
+management system. Pre-built packages can then be published to a depot alongside
 each Genode release.
 
 A tool that manages third party standalone code compilation, the download of
@@ -462,7 +462,7 @@ integrated into QtCreator or some other IDE that supports external tooling.
 *Package format*
 
 Genode packages are signed and XZ compressed archives. There exist different
-kinds of archives (Raw, API, Source, Binary, Package). Please refer to Genode's
+kinds of archives (raw, API, source, binary, package). Please refer to Genode's
 [https://genode.org/documentation/developer-resources/package_management - package management]
 documentation for a detailed description.
 
@@ -474,21 +474,21 @@ We investigated the fitness of both Ubuntu Touch and the Sailfish SDK as an app
 development API for Genode. While the ecosystem and development environments of
 both SKDs look similar, Sailfish's Silica contains proprietary parts that would
 have to be implemented or designed by us. While this approach is feasible and
-Silica definitely has a very slick and professionally looking UI (compared to
-Ubuntu or Genode), this approach would lead to a serious development effort with
-an unclear outcome. It would most likely be feature incomplete and would introduce
-additional development efforts by keeping up to date with Sailfish OS
+Silica definitely has a very slick and professionally looking UI compared to
+other contemporaries, this approach would lead to a serious development effort with
+an uncertain outcome. It would most likely remain feature incomplete and would introduce
+additional development efforts by the need to stay up to date with Sailfish OS
 developments. Ubuntu Touch apps can be brought to Genode through the Ubuntu
-UI toolkit with significantly less effort. The tool kit has been renamed to
+UI toolkit with significantly less friction. The tool kit has recently been renamed to
 [https://gitlab.com/ubports/development/core/lomiri-ui-toolkit - Lomiri UI toolkit]
 and is actively developed by the UBPorts community. Most apps available for
 Sailfish OS are available or have a similar app on Ubuntu Touch, with the
-exception of Whisperfish (Signal client).  Additionally, Jolla seems to push its
+exception of Whisperfish (Signal client).  As a further point of uncertainly, Jolla lately pushes its
 Android compatibility layer support more aggressively (it became its own
-[https://jolla.com/appsupport - business]), which may lead third party and
-open-source developers to question their efforts writing native Sailfish apps.
+[https://jolla.com/appsupport - business]). This may prompt third party
+developer to reconsider their investment in native Sailfish apps.
 
-In this article we have demonstrated how to integrate a small part of the Ubuntu
+In this article, we have demonstrated how to integrate a small part of the Ubuntu
 Touch SDK (the UI) into the Genode universe. As a result, official demonstrator
 apps can be executed on Genode with no modifications needed. The subsequent
 natural step would be the porting of an advanced real-world app to the
